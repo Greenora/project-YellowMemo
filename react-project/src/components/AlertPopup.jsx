@@ -19,18 +19,18 @@ function AlertPopup({ show, onYes, onNo, message }) {
         <div className="flex justify-center space-x-4"> {/* 버튼 두 개 사이 간격 */}
           {/* Yes 버튼 */}
           <CustomButton
-            onClick={onYes} 
+            onClick={onNo} 
             className="w-24 h-10 border border-black text-black bg-transparent"
           >
-            Yes
+            No
           </CustomButton>
 
           {/* No 버튼 */}
           <CustomButton
-            onClick={onNo}
+            onClick={onYes}
             className="w-24 h-10 bg-black text-white"
           >
-            No
+            Yes
           </CustomButton>
         </div>
       </div>
