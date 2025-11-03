@@ -122,7 +122,7 @@ export default function Post() {
   return (
     <div className="relative min-h-screen bg-[#fcfcf8] p-4 overflow-hidden select-none">
       {/* 로그아웃 버튼 */}
-      <button onClick={handleLogout} className="fixed top-6 right-8 z-50 text-sm text-blue-600">Logout</button>
+      <button onClick={handleLogout} className="fixed top-6 right-8 z-50 text-sm text-yellow-400">Logout</button>
 
       {/* showSide가 false이면 sidebar toggle button이 보이기, 클릭 시 사이드바 열기 */}
       {!showSide && <SidebarToggleBtn onClick={() => setShowSide(true)} />}
