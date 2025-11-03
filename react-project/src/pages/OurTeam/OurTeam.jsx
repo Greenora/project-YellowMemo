@@ -78,7 +78,7 @@ function OurTeam() {
       {/* 사이드바 및 토글 버튼 */}
       {!showSide && <SidebarToggleBtn onClick={() => setShowSide(true)} />}
       {showSide && <div ref={sidebarRef}><Sidebar onClose={() => setShowSide(false)} /></div>}
-      <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-8 mt-10 text-gray-900 text-center">
+      <h1 className="text-4xl text-semibold mb-8 mt-14 text-gray-900 text-center">
         Introduce our team
       </h1>
 
