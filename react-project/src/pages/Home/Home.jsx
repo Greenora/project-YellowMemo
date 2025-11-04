@@ -7,6 +7,7 @@ import Copyright from "../../components/Copyright";
 function Home() {
   const [step, setStep] = useState("note");
   const navigate = useNavigate();
+  const [showCopyright, setShowCopyright] = useState(true);
   
   // 페이지가 로드될 때 스크롤 위치를 맨 위로 설정하고, 스크롤 복원 방지
   useEffect(() => {
@@ -14,6 +15,31 @@ function Home() {
       window.history.scrollRestoration = "manual";
     }
     window.scrollTo(0, 0);
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const aboutSection = document.querySelector("#about-section");
+      const teamSection = document.querySelector("#team-section");
+      const scrollY = window.scrollY;
+
+      if (aboutSection && teamSection) {
+        const aboutTop = aboutSection.offsetTop;
+        const teamTop = teamSection.offsetTop;
+        
+        const triggerPoint = aboutTop - window.innerHeight + 10;
+
+        // About 섹션 도달 시 숨기고, Team 섹션 근처에서 다시 보이기
+        if (scrollY > triggerPoint && scrollY < teamTop) {
+          setShowCopyright(false);
+        } else {
+          setShowCopyright(true);
+        }
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const handleNoteClick = async () => {
@@ -97,13 +123,22 @@ function Home() {
             </div>
           )}
         </div>
+        
         {/* 카피라이트 */}
-        <Copyright />
+        <div
+          className={`transition-opacity duration-700 ${
+            showCopyright ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
+        >
+          <Copyright />
+        </div>
+
         {/* 애니메이션 */}
 
       </section>
+
       {/* 2. About(소개) 섹션 */}
-      <section className="w-full flex flex-col items-center justify-center mt-24 mb-16 min-h-screen">
+      <section id="about-section" className="w-full flex flex-col items-center justify-center mt-24 mb-16 min-h-screen">
         <div className="w-full max-w-2xl px-4 space-y-10">
           <FadeInOnScroll>
             <p className="text-4xl font-semibold text-gray-900">작지만, 꼭 필요한 아이디어.</p>
@@ -178,7 +213,7 @@ function Home() {
             <br />
             <br />
             <FadeInOnScroll delay={0.8}>
-              <p className="text-lg text-gray-700 leading-relaxed fade-in-up text-center">
+              <p id="team-section" className="text-lg text-gray-700 leading-relaxed fade-in-up text-center">
                 Team Girlz Night
               </p>
             </FadeInOnScroll>
