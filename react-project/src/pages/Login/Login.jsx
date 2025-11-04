@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import AuthInputBox from "../../components/AuthInputBox"; //아이디 비번 입력 박스
 import CustomButton from "../../components/CustomButton.jsx"; //로그인 버튼
 import useLogin from "./useLogin.js"; //로그인 동작을 처리하는 훅을 가져옴
+import Copyright from "../../components/Copyright.jsx";
 
 
 //밑의 함수는 실제로 화면에 보여지는 로그인 컴포넌트
@@ -42,59 +43,62 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-[#fcfcf8] px-16 pt-20">
       <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-2 text-gray-900">.Yellowmemo</h1>
-        <p className="text-lg sm:text-lg md:text-xl lg:text-2xl text-gray-700 font-normal">
-          Think, memo, create your own idea board by just One-click
-       </p>
+      <p className="text-lg sm:text-lg md:text-xl lg:text-2xl text-gray-700 font-normal">
+        Think, memo, create your own idea board by just One-click
+      </p>
     
-   <div className="flex flex-col items-center w-full mt-24">  
-    <div className="flex flex-col items-center w-full max-w-[700px]">
-      {/* 아이디 입력 박스: 값을 loginId로 채우고, 바뀌면 setLoginId로 저장 */}
-      <AuthInputBox
-        value={loginId} // 현재 입력된 ID
-        onChange={(e) => setLoginId(e.target.value)} // 입력값이 바뀌면 저장
-        placeholder="ID" // 흐리게 'ID' 라고 보임
-        hasError={!!error} // 에러가 있으면 빨간 테두리
-      />
+      <div className="flex flex-col items-center w-full mt-24">  
+        <div className="flex flex-col items-center w-full max-w-[700px]">
+          {/* 아이디 입력 박스: 값을 loginId로 채우고, 바뀌면 setLoginId로 저장 */}
+          <AuthInputBox
+            value={loginId} // 현재 입력된 ID
+            onChange={(e) => setLoginId(e.target.value)} // 입력값이 바뀌면 저장
+            placeholder="ID" // 흐리게 'ID' 라고 보임
+            hasError={!!error} // 에러가 있으면 빨간 테두리
+          />
 
-      {/* 비밀번호 입력 박스 */}
-      <AuthInputBox
-        value={password} // 현재 입력된 PW
-        onChange={(e) => setPassword(e.target.value)} // 입력값이 바뀌면 저장
-        placeholder="PW" // 흐리게 'PW' 라고 보임
-        type="password" // 비밀번호니까 입력한 글자가 안 보임
-        hasError={!!error} // 에러가 있으면 빨간 테두리
-      />
-    </div>
+          {/* 비밀번호 입력 박스 */}
+          <AuthInputBox
+            value={password} // 현재 입력된 PW
+            onChange={(e) => setPassword(e.target.value)} // 입력값이 바뀌면 저장
+            placeholder="PW" // 흐리게 'PW' 라고 보임
+            type="password" // 비밀번호니까 입력한 글자가 안 보임
+            hasError={!!error} // 에러가 있으면 빨간 테두리
+          />
+        </div>
 
-      {/* 에러 메시지 보여주기 (에러가 있을 때만 보여짐) */}
-      {error && (
-        <p className="text-[#ff0000] text-base mb-1 w-[400px] text-center">
-           Please check your ID/PASSWORD
-        </p>
-      )}
+        {/* 에러 메시지 보여주기 (에러가 있을 때만 보여짐) */}
+        {error && (
+          <p className="text-[#ff0000] text-base mb-1 w-[400px] text-center">
+            Please check your ID/PASSWORD
+          </p>
+        )}
 
-      {/* 로그인 버튼 누르면 handleLogin 함수 실행 */}
-      <CustomButton 
-        onClick={handleLogin}
-        className="w-[180px] h-14 bg-white text-black rounded-full shadow-[0_2px_8px_0_rgba(0,0,0,0.08)] font-normal text-lg mt-5 mb-10"
+        {/* 로그인 버튼 누르면 handleLogin 함수 실행 */}
+        <CustomButton 
+          onClick={handleLogin}
+          className="w-[180px] h-14 bg-white text-black rounded-full shadow-[0_2px_8px_0_rgba(0,0,0,0.08)] font-normal text-lg mt-5 mb-10"
         >
-        Login
-      </CustomButton>
+          Login
+        </CustomButton>
 
-     <span className="flex flex-col gap-2 items-center w-[400px]">
-      <p className="text-base text-black">
-        I don’t have{" "}
-        <a href="/register" className="text-[#3b82f6] underline">
-          account
-        </a>
-    </p>
-    <p className="text-base text-black">
-      I forgot my{" "}
-      <a href="/reset-password" className="text-[#3b82f6] underline">
-        password
-          </a>
-        </p>
+        <span className="flex flex-col gap-2 items-center w-[400px]">
+          <p className="text-base text-black">
+            I don’t have{" "}
+            <a href="/register" className="text-[#3b82f6] underline">
+              account
+            </a>
+          </p>
+          <p className="text-base text-black">
+            I forgot my{" "}
+            <a href="/reset-password" className="text-[#3b82f6] underline">
+              password
+            </a>
+          </p>
         </span>
+
+        {/* 카피라이트 */}
+        <Copyright />
       </div>
     </div>
   );

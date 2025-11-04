@@ -1,6 +1,7 @@
 import AuthInputBox from "../../components/AuthInputBox";
 import CustomButton from "../../components/CustomButton";
 import useResetPassword from "./useResetPassword";
+import Copyright from "../../components/Copyright";
 
 //  "비밀번호 재설정 화면"을 보여주는
 export default function ResetPassword() {
@@ -79,6 +80,8 @@ export default function ResetPassword() {
           {/* 로그인 페이지로 가는 링크 */}
           Login
         </a>
+
+        <Copyright />
       </div>
     </div>
   );
