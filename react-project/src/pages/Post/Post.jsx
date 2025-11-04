@@ -9,6 +9,7 @@ import CommentEditPopup from "../../components/CommentEditPopup";
 import { DndContext } from "@dnd-kit/core";  // DndContext -> drag and drop 기능 활성화
 import Drag from "../../components/Drag";
 import { getMaxLineLength } from "../../components/textboxUtils";
+import Copyright from "../../components/Copyright";
 
 import CommentIcon from "../../assets/post_comment.svg";
 import ShareIcon from "../../assets/post_share.svg";
@@ -303,6 +304,8 @@ export default function Post() {
           });
         }}
       />
+
+      <Copyright />
     </div>
   );
 }

@@ -98,9 +98,7 @@ function Home() {
           )}
         </div>
         {/* 카피라이트 */}
-        <div>
-          <Copyright />
-        </div>
+        <Copyright />
         {/* 애니메이션 */}
 
       </section>

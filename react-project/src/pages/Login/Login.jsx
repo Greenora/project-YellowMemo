@@ -98,9 +98,7 @@ export default function Login() {
         </span>
 
         {/* 카피라이트 */}
-        <div>
-          <Copyright />
-        </div>
+        <Copyright />
       </div>
     </div>
   );
