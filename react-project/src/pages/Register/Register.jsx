@@ -5,6 +5,7 @@
 import AuthInputBox from "../../components/AuthInputBox";
 import CustomButton from "../../components/CustomButton";
 import useRegister from "./useRegister"
+import Copyright from "../../components/Copyright";
 
 //회원가입 화면 컴포넌트 함수
 export default function Register() {
@@ -69,6 +70,11 @@ export default function Register() {
             account   {/*이미 계정이 있을때 누르면 로그인 페이지로 이동*/}
           </a>
         </span>
+
+        {/* 카피라이트 */}
+        <div>
+          <Copyright />
+        </div>
       </div>
     </div>
   )
