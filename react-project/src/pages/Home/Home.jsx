@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import StickyNote from "../../assets/sticky-note.png";
 import FadeInOnScroll from "../../components/FadeInOnScroll"; // 앞서 안내한 스크롤 효과 컴포넌트
-import Copyright from "../../components/copyright";
+import Copyright from "../../components/Copyright";
 
 function Home() {
   const [step, setStep] = useState("note");

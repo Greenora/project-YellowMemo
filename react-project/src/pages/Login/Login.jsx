@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import AuthInputBox from "../../components/AuthInputBox"; //아이디 비번 입력 박스
 import CustomButton from "../../components/CustomButton.jsx"; //로그인 버튼
 import useLogin from "./useLogin.js"; //로그인 동작을 처리하는 훅을 가져옴
-import Copyright from "../../components/copyright.jsx";
+import Copyright from "../../components/Copyright.jsx";
 
 
 //밑의 함수는 실제로 화면에 보여지는 로그인 컴포넌트
