@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import AuthInputBox from "../../components/AuthInputBox"; //아이디 비번 입력 박스
 import CustomButton from "../../components/CustomButton.jsx"; //로그인 버튼
 import useLogin from "./useLogin.js"; //로그인 동작을 처리하는 훅을 가져옴
+import Copyright from "../../components/copyright.jsx";
 
 
 //밑의 함수는 실제로 화면에 보여지는 로그인 컴포넌트
@@ -95,10 +96,10 @@ export default function Login() {
             </a>
           </p>
         </span>
-        
+
         {/* 카피라이트 */}
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 text-gray-500 text-xs sm:text-sm text-center w-[90vw] max-w-2xl">
-          <p>© 2025 Yellowmemo. All rights reserved to team Girlz Night.</p>
+        <div>
+          <Copyright />
         </div>
       </div>
     </div>
