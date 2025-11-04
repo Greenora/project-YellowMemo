@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import StickyNote from "../../assets/sticky-note.png";
 import FadeInOnScroll from "../../components/FadeInOnScroll"; // 앞서 안내한 스크롤 효과 컴포넌트
+import Copyright from "../../components/copyright";
 
 function Home() {
   const [step, setStep] = useState("note");
@@ -97,8 +98,8 @@ function Home() {
           )}
         </div>
         {/* 카피라이트 */}
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 text-gray-500 text-xs sm:text-sm text-center w-[90vw] max-w-2xl">
-          <p>© 2025 Yellowmemo. All rights reserved to team Girlz Night.</p>
+        <div>
+          <Copyright />
         </div>
         {/* 애니메이션 */}
 
