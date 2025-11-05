@@ -92,11 +92,10 @@ function OsakaPage() {
       {!showSide && <SidebarToggleButton onClick={() => setShowSide(true)} />}
       {showSide && <div ref={sidebarRef}><Sidebar onClose={() => setShowSide(false)} /></div>}
       
-      <h1 className="text-3xl text-semibold mb-8 mt-14 text-gray-900 text-center">
+      <h1 className="text-3xl text-semibold mt-14 text-gray-900 text-center">
         오사카 현지 연수 프로그램
       </h1>
-      <p className="pl-10">2025년 8월 4일 ~ 8월 29일, 오사카</p>
-      <p className="pl-10">2025년 8월 4일 ~ 8월 29일, 오사카</p>
+      <p className="text-md text-center mb-8">2025년 8월 4일 ~ 8월 29일, 오사카</p>
 
       <div className="p-4 sm:p-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
