@@ -10,6 +10,7 @@ import PostEdit from "./pages/PostEdit/PostEdit";
 import PostCreate from "./pages/PostCreate/PostCreate";
 import OurTeam from "./pages/OurTeam/OurTeam";
 import JapanProgram from "./pages/JapanProgram/JapanProgram";
+import OsakaPage from './pages/OsakaProgram/Osaka';
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
         <Route path="/post/create" element={<PostCreate />} />
         <Route path="/our-team" element={<OurTeam />} />
         <Route path="/program-introduce" element={<JapanProgram />} />
+        <Route path="/osaka-introduce" element={<OsakaPage />} />
 
       </Routes>
     </BrowserRouter>

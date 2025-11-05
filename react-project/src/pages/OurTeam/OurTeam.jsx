@@ -79,7 +79,7 @@ function OurTeam() {
       {!showSide && <SidebarToggleBtn onClick={() => setShowSide(true)} />}
       {showSide && <div ref={sidebarRef}><Sidebar onClose={() => setShowSide(false)} /></div>}
       <h1 className="text-4xl text-semibold mb-8 mt-14 text-gray-900 text-center">
-        Introduce our team
+        Team Greenora
       </h1>
 
       {/* 반응형 그리드 레이아웃 */}
