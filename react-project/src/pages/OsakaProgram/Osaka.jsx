@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
-import JapanProgramDetail from '../../components/JapanProgramDetail';
+import { useState, useEffect, useRef } from "react";
+import SidebarToggleButton from "../../components/SidebarToggleButton";
 import Sidebar from "../../components/SideBar";
-import SidebarToggleBtn from "../../components/SidebarToggleButton";
+import JapanProgramDetail from "../../components/JapanProgramDetail";
+function OsakaPage() {
 
-function JapanProgram() {
   const [programs, setPrograms] = useState([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [showSide, setShowSide] = useState(false);
@@ -16,7 +16,7 @@ function JapanProgram() {
       setIsAdmin(true);
     }
 
-    fetch('http://localhost:5000/japan_programs')
+    fetch('http://localhost:5000/osaka_program')
       .then(res => {
         if (!res.ok) {
           throw new Error('데이터를 불러오는 데 실패했습니다.');
@@ -89,12 +89,13 @@ function JapanProgram() {
 
   return (
     <div className="relative min-h-screen bg-[#fcfcf8] p-4">
-      {!showSide && <SidebarToggleBtn onClick={() => setShowSide(true)} />}
+      {!showSide && <SidebarToggleButton onClick={() => setShowSide(true)} />}
       {showSide && <div ref={sidebarRef}><Sidebar onClose={() => setShowSide(false)} /></div>}
       
-      <h1 className="text-3xl text-semibold mb-8 mt-14 text-gray-900 text-center">
-        Study Abroad Program
+      <h1 className="text-3xl text-semibold mt-14 text-gray-900 text-center mb-1">
+        Global Talent Development Overseas Training Program in Osaka
       </h1>
+      <p className="text-md text-center mb-8 text-gray-500">2025년 8월 4일 ~ 8월 29일, 오사카</p>
 
       <div className="p-4 sm:p-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
@@ -124,7 +125,7 @@ function JapanProgram() {
         </div>
       </div>
     </div>
-  );
+  )
 }
 
-export default JapanProgram;
+export default OsakaPage;
