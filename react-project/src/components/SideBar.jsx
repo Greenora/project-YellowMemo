@@ -126,14 +126,14 @@ function Sidebar() {
         onClick={() => goTo("/osaka-introduce")}
         className="w-[90%] bg-white rounded-xl py-3 mt-2 mb-1 text-base hover:bg-slate-100"
       >
-        오사카 현지 연수
+        Our experience Osaka
       </CustomButton>
 
       <CustomButton
         onClick={() => goTo("/program-introduce")}
         className="w-[90%] bg-white rounded-xl py-3 mt-2 mb-8 text-base hover:bg-slate-100"
       >
-        현지학기 소개
+        About Study Abroad Program
       </CustomButton>
 
       {/* Filter 버튼 */}

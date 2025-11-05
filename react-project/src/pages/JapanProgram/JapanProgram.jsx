@@ -93,7 +93,7 @@ function JapanProgram() {
       {showSide && <div ref={sidebarRef}><Sidebar onClose={() => setShowSide(false)} /></div>}
       
       <h1 className="text-3xl text-semibold mb-8 mt-14 text-gray-900 text-center">
-        현지학기제 프로그램
+        Study Abroad Program
       </h1>
 
       <div className="p-4 sm:p-8">
