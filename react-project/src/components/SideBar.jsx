@@ -104,7 +104,7 @@ function Sidebar() {
             onChange={handleProfileChange}
           />
         </div>
-        <div className="mt-5 mb-2 text-2xl">{user.loginId}'s space</div>
+        <div className="mt-5 mb-1 text-2xl">{user.loginId}'s space</div>
       </div>
 
       {/* New Post 버튼 */}
@@ -123,6 +123,13 @@ function Sidebar() {
       </CustomButton>
 
       <CustomButton
+        onClick={() => goTo("/osaka-introduce")}
+        className="w-[90%] bg-white rounded-xl py-3 mt-2 mb-1 text-base hover:bg-slate-100"
+      >
+        오사카 현지 연수
+      </CustomButton>
+
+      <CustomButton
         onClick={() => goTo("/program-introduce")}
         className="w-[90%] bg-white rounded-xl py-3 mt-2 mb-8 text-base hover:bg-slate-100"
       >
@@ -134,13 +141,13 @@ function Sidebar() {
         <span className="text-gray-500 text-sm ml-1 mr-2">Filter</span>
         <CustomButton
           onClick={() => setFilter("all")}
-          className={`px-4 py-1 rounded-lg border ${filter === "all" ? "bg-gray-200 text-black" : "bg-white text-gray-600"} shadow-none`}
+          className={`px-4 rounded-lg border ${filter === "all" ? "bg-gray-200 text-black" : "bg-white text-gray-600"} shadow-none`}
         >
           All
         </CustomButton>
         <CustomButton
           onClick={() => setFilter("mine")}
-          className={`px-4 py-1 rounded-lg border ${filter === "mine" ? "bg-gray-200 text-black" : "bg-white text-gray-600"} shadow-none`}
+          className={`px-4 rounded-lg border ${filter === "mine" ? "bg-gray-200 text-black" : "bg-white text-gray-600"} shadow-none`}
         >
           Mine
         </CustomButton>
