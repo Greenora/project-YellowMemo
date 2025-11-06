@@ -149,7 +149,7 @@ function Home() {
               <p className="text-lg text-gray-700 leading-relaxed fade-in-up">이 프로젝트는 어느 날, 책상 위에 놓인 노란색 포스트잇 한 장에서 시작되었습니다.</p>
             </FadeInOnScroll>
             <FadeInOnScroll delay={0.1}>
-              <p className="text-lg text-gray-700 leading-relaxed fade-in-up">순간 떠오르는 생각, 스쳐가는 아이디어를 간직하고 공유하고 싶었습니다.</p>
+              <p className="text-lg text-gray-700 leading-relaxed fade-in-up">순간 떠오르는 생각, 스쳐가는 아이디어를 간직하고 공유하는 공간을 만들고 싶었습니다.</p>
             </FadeInOnScroll>
           </div>
 
@@ -175,10 +175,10 @@ function Home() {
 
           <div className="space-y-3">
             <FadeInOnScroll delay={0.4}>
-              <p className="text-lg text-gray-700 leading-relaxed fade-in-up">데이터를 간단히 저장하는 구조로 시작했지만,</p>
+              <p className="text-lg text-gray-700 leading-relaxed fade-in-up">처음엔 단순한 JSON Server 구조로 아이디어를 담기 시작했지만,</p>
             </FadeInOnScroll>
             <FadeInOnScroll delay={0.5}>
-              <p className="text-lg text-gray-700 leading-relaxed fade-in-up">이 안에는 생각을 존중하는 작은 철학이 담겨 있습니다.</p>
+              <p className="text-lg text-gray-700 leading-relaxed fade-in-up">이제는 NestJS를 기반으로 생각을 더 오래, 더 안정적으로 존중할 수 있는 공간으로 발전하고 있습니다.</p>
             </FadeInOnScroll>
             <FadeInOnScroll delay={0.6}>
               <p className="text-lg text-gray-700 leading-relaxed fade-in-up">빠르게 적고, 가볍게 남기며, 편하게 돌아볼 수 있도록.</p>
