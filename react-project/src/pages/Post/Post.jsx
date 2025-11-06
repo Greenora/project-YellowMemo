@@ -128,9 +128,16 @@ export default function Post() {
       {/* showSide가 false이면 sidebar toggle button이 보이기, 클릭 시 사이드바 열기 */}
       {!showSide && <SidebarToggleBtn onClick={() => setShowSide(true)} />}
       {/* showSide가 true이면 sidebar 보이기, sidebar에서 닫기 버튼을 누르면사이드바 닫기 */}
-      {showSide && <div ref={sidebarRef}><Sidebar onClose={() => setShowSide(false)} /></div>}
+      {showSide && (
+        <div
+          ref={sidebarRef}
+          className="z-[1000]"
+          >
+            <Sidebar onClose={() => setShowSide(false)} />
+          </div>
+      )}
 
-      <div className="relative w-full h-[90vh] overflow-hidden">
+      <div className="relative w-full h-[90vh] overflow-hidden z-[0]">
         {/* DndContext로 drag and drop 기능 활성화 */}
         <DndContext onDragEnd={(e) => handleDragEnd(e, myId, postits, setPostits)}>
 
@@ -153,51 +160,54 @@ export default function Post() {
           ))}
 
           {/* 포스트잇 */}
-          {postits.map((pt, i) => ( // 포스트잇 배열을 순회하며 렌더링
-            <Drag key={pt.id} id={pt.id} position={{ x: pt.x, y: pt.y }}>
-              <div
-                style={{
-                  backgroundImage: `url(${NoteBg})`, // 포스트잇 배경 이미지
-                  backgroundSize: "cover", // 배경 이미지 꽉 채우기
-                  backgroundPosition: "center", // 배경 이미지 중앙 정렬
-                  zIndex: pt.zIndex ?? i + 100, // z 인덱스, 없으면 index + 100으로 설정
-                  cursor: isOwner ? "grab" : "default", // 현재 사용자가 포스트잇 작성자이면 cursor를 grab으로 변경, 아니면 default
-                  padding: "1.2rem", // 내부 여백
-                  display: "flex", // flex 레이아웃 사용
-                  alignItems: "flex-start", justifyContent: "flex-start", // 세로축, 가로축 왼쪽 정렬
-                  whiteSpace: "pre-wrap",  // 줄바꿈&공백 그대로 유지(자동 줄바꿈)
-                  wordBreak: "break-word", // 단어가 길어서 넘치면 단어 중간에서 줄바꿈
-                  outline: "none" // focus 받았을 때 외곽선 나타나지 않음
-                }}
-                className="select-none text-sm xl:text-base 2xl:text-lg text-black w-[160px] h-[160px] xl:w-[180px] xl:h-[180px] 2xl:w-[190px] 2xl:h-[190px] transition-all duration-300"
-                // 텍스트 선택(드래그) 불가
-                // 글자 크기 : small, xl(1280px 이상): base, 2xl(1536px이상): large
-                // w, h : 너비, 높이 지정
-                //  트랜지션(애니메이션) 효과 적용, 지속시간 300ms
+          <div className="absolute inset-0 z-[500]"> {/* inset-0은 top, right, left, bottom: 0을 한 번에 지정 */}
+            {postits.map((pt, i) => ( // 포스트잇 배열을 순회하며 렌더링
+              <Drag key={pt.id} id={pt.id} position={{ x: pt.x, y: pt.y }}>
+                <div
+                  style={{
+                    backgroundImage: `url(${NoteBg})`, // 포스트잇 배경 이미지
+                    backgroundSize: "cover", // 배경 이미지 꽉 채우기
+                    backgroundPosition: "center", // 배경 이미지 중앙 정렬
+                    zIndex: pt.zIndex ?? i + 500, // z 인덱스, 없으면 index + 500으로 설정
+                    cursor: isOwner ? "grab" : "default", // 현재 사용자가 포스트잇 작성자이면 cursor를 grab으로 변경, 아니면 default
+                    padding: "1.2rem", // 내부 여백
+                    display: "flex", // flex 레이아웃 사용
+                    alignItems: "flex-start", justifyContent: "flex-start", // 세로축, 가로축 왼쪽 정렬
+                    whiteSpace: "pre-wrap",  // 줄바꿈&공백 그대로 유지(자동 줄바꿈)
+                    wordBreak: "break-word", // 단어가 길어서 넘치면 단어 중간에서 줄바꿈
+                    outline: "none", // focus 받았을 때 외곽선 나타나지 않음
+                    position: "absolute"
+                  }}
+                  className="select-none text-sm xl:text-base 2xl:text-lg text-black w-[160px] h-[160px] xl:w-[180px] xl:h-[180px] 2xl:w-[190px] 2xl:h-[190px] transition-all duration-300"
+                  // 텍스트 선택(드래그) 불가
+                  // 글자 크기 : small, xl(1280px 이상): base, 2xl(1536px이상): large
+                  // w, h : 너비, 높이 지정
+                  //  트랜지션(애니메이션) 효과 적용, 지속시간 300ms
 
-                onMouseEnter={() => pt.userId === myId && setHoverId(pt.id)} /* 마우스 커서가 내가 쓴 post it 위에 올려졌을 때만 hover 시작 */
-                onMouseLeave={() => pt.userId === myId && setHoverId(null)} /* 마우스 커서가 내가 쓴 post it을 벗어나면 hover 끝 */
-              >
-                {/* 포스트잇 내용 출력 */}
-                {pt.content}
-                {/* 마우스 커서가 내가 쓴 post it 위에 올려졌을 때만 나타나는 옵션(...) 버튼 */}
-                {hoverId === pt.id && ( // hoverId가 현재 순회 중인 pt.id와 같을 때만 버튼 표시
-                  <button className="absolute top-1 right-3 pointer-events-auto"
-                    onPointerDown={e => { 
-                      e.stopPropagation(); // 부모(Drag 컴포넌트)로 전파되는 걸 차단
-                      e.preventDefault(); // 기본 드래그 동작 차단
-                    }}
-                    onClick={() => { 
-                      setEditingId(pt.id); /* 어떤 포스트잇을 편집할지 ID를 기억 */
-                    setDraftText(pt.content); /* 편집 팝업 안의 textarea에 원래 내용을 채워 넣음 */
-                    }}
-                  >
-                    …
-                  </button>
-                )}
-              </div>
-            </Drag>
-          ))}
+                  onMouseEnter={() => pt.userId === myId && setHoverId(pt.id)} /* 마우스 커서가 내가 쓴 post it 위에 올려졌을 때만 hover 시작 */
+                  onMouseLeave={() => pt.userId === myId && setHoverId(null)} /* 마우스 커서가 내가 쓴 post it을 벗어나면 hover 끝 */
+                >
+                  {/* 포스트잇 내용 출력 */}
+                  {pt.content}
+                  {/* 마우스 커서가 내가 쓴 post it 위에 올려졌을 때만 나타나는 옵션(...) 버튼 */}
+                  {hoverId === pt.id && ( // hoverId가 현재 순회 중인 pt.id와 같을 때만 버튼 표시
+                    <button className="absolute top-1 right-3 pointer-events-auto"
+                      onPointerDown={e => { 
+                        e.stopPropagation(); // 부모(Drag 컴포넌트)로 전파되는 걸 차단
+                        e.preventDefault(); // 기본 드래그 동작 차단
+                      }}
+                      onClick={() => { 
+                        setEditingId(pt.id); /* 어떤 포스트잇을 편집할지 ID를 기억 */
+                      setDraftText(pt.content); /* 편집 팝업 안의 textarea에 원래 내용을 채워 넣음 */
+                      }}
+                    >
+                      …
+                    </button>
+                  )}
+                </div>
+              </Drag>
+            ))}
+          </div>
 
           {/* 이미지 */}
           {images.map((img, i) => ( // 이미지 배열 순회하며 렌더링
