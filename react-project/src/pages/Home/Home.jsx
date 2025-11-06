@@ -149,19 +149,19 @@ function Home() {
               <p className="text-lg text-gray-700 leading-relaxed fade-in-up">이 프로젝트는 어느 날, 책상 위에 놓인 노란색 포스트잇 한 장에서 시작되었습니다.</p>
             </FadeInOnScroll>
             <FadeInOnScroll delay={0.1}>
-              <p className="text-lg text-gray-700 leading-relaxed fade-in-up">순간 떠오른 생각, 스쳐가는 아이디어를 어디엔가 간직하고 공유하고 싶었습니다.</p>
+              <p className="text-lg text-gray-700 leading-relaxed fade-in-up">순간 떠오르는 생각, 스쳐가는 아이디어를 간직하고 공유하고 싶었습니다.</p>
             </FadeInOnScroll>
           </div>
 
           <div className="space-y-3">
             <FadeInOnScroll delay={0.2}>
               <p className="text-lg text-gray-700 leading-relaxed fade-in-up">
-                이 앱은 복잡한 기능보다는 <strong className="text-gray-900">아이디어를 기록하는 그 자체</strong>에 집중하기 위해 제작 되었습니다.
+                이 앱은 복잡한 기능보다는 <strong className="text-gray-900">아이디어를 기록하는 그 자체</strong>에 집중하기 위해 제작되었습니다.
               </p>
             </FadeInOnScroll>
             <FadeInOnScroll delay={0.3}>
               <p className="text-lg text-gray-700 leading-relaxed fade-in-up">
-                React와 JSON server로 만들어졌으며, 
+                React와 NestJS로 만들어졌으며, 
                 
               </p>
             </FadeInOnScroll>
