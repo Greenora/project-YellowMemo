@@ -1,0 +1,7 @@
+# server/.dockerignore
+
+.git
+.DS_Store
+node_modules
+dist
+.env
