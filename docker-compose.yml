@@ -1,0 +1,49 @@
+services:
+  # NestJS 백엔드 
+  server:
+    build: ./server
+    container_name: girzday-server
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./server:/usr/src/app
+      - /usr/src/app/node_modules
+    env_file:
+      - ./.env  # 루트의 .env 파일 사용
+    depends_on:
+      - mysql
+
+  # MySQL DB 
+  mysql:
+    image: mysql:8.0
+    container_name: girzday_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: skadnwns7188         #  나중에 바꿔
+      MYSQL_DATABASE: project_girzday
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: apppass_safe123         #  나중에 바꿔
+    ports:
+      - "3307:3306" # 3306 충돌 피해서 3307 포트 사용
+    command: [
+      "--character-set-server=utf8mb4",
+      "--collation-server=utf8mb4_0900_ai_ci",
+      "--default-authentication-plugin=caching_sha2_password"
+    ]
+    volumes:
+      - db_data:/var/lib/mysql
+
+  # React 프론트엔드 
+  react:
+    build: ./react-project
+    container_name: girzday-react
+    ports:
+      - "3001:3000" # 백엔드 3000번과 충돌 피해서 3001 포트 사용
+    volumes:
+      - ./react-project:/app
+      - /app/node_modules
+    stdin_open: true # React 개발 서버 유지를 위해 필요
+    tty: true        # React 개발 서버 유지를 위해 필요
+
+volumes:
+  db_data:
