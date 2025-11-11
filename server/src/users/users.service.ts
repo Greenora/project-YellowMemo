@@ -1,26 +1,27 @@
-import { Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { In, Repository } from 'typeorm';
+import { User } from './entities/user.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+
 
 @Injectable()
 export class UsersService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
-  }
+  constructor(
+    @InjectRepository(User)
+    private usersRepository: Repository<User>,
+  ) {}
 
-  findAll() {
-    return `This action returns all users`;
-  }
+  //내 정보 찾기 GET /users/me 
+  async findMe(userId: number): Promise<Partial<User>> {
+    const user = await this.usersRepository.findOne({     //user.entity에서 정의한 id로 유저를 찾는다
+      where: {id: userId},
+      select: ['id', 'username', 'nickname', 'image_url', 'createdAt'],  //비밀번호 해시, 토큰 관련 정보를 제외하고 필요한 정보만 선택
+    });
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
-  }
+    if(!user){
+      throw new NotFoundException('사용자 정보를 찾을 수 없습니다.')
+    }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+    return user;
   }
 }
