@@ -5,7 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '../users/entities/user.entity';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
-
+import { JwtStrategy } from './jwt.strategy';
 
 @Module({
   imports: [
@@ -19,6 +19,7 @@ import { PassportModule } from '@nestjs/passport';
     }),
     TypeOrmModule.forFeature([User]),], // auth 모듈이 user테이블을 쓸 수 있게 등록록
   controllers: [AuthController],
-  providers: [AuthService],
+  providers: [AuthService, JwtStrategy], 
+  exports: [JwtStrategy, PassportModule], //다른 모듈에서 쓸 수 있게 
 })
 export class AuthModule {}
