@@ -60,6 +60,7 @@ export class PostsService {
         contents: true,
         createdAt: true,
         updatedAt: true,
+        userId: true,      //권한 체크를 위해 userId 포함
         user: {
           id: true,
           nickname: true,
