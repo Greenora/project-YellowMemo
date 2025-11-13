@@ -5,6 +5,7 @@ import { UpdatePostDto } from './dto/update-post.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from 'src/users/entities/user.entity';
 import type { Request } from 'express';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('posts') //API 루트는 /posts 
 export class PostsController {
@@ -12,6 +13,7 @@ export class PostsController {
 
   //게시물 생성 API POST/ posts
   @Post()
+  @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt')) //토큰 인증 필수
   create(
     @Req() req: Request,  //토큰에서 User 정보 가져온다
@@ -34,6 +36,7 @@ export class PostsController {
 
   //게시물 수정 PATCH /posts/:id
   @Patch(':id')
+  @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt')) //토큰 인증
   update(@Param('id') id: string, @Body() updatePostDto: UpdatePostDto, @Req() req: Request) {  //토큰에서 유저 정보 가져오고
     const user = req.user as User;  //유저 id를 추출함
@@ -42,6 +45,7 @@ export class PostsController {
 
   //게시믈 삭제 DELETE /posts/:id
   @Delete(':id')
+  @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   remove(@Param('id') id: string, @Req() req: Request) { //토큰에서 유저 정보 가져오고고
     const user = req.user as User; //유저 id를 추출함
