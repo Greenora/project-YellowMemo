@@ -1,4 +1,4 @@
-import { IsArray, IsNotEmpty, IsString, ValidateNested } from 'class-validator';
+import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
 // Contents 배열 안의 개별 스티커 객체 타입
@@ -8,15 +8,19 @@ class ContentItemDto {
   type: 'text' | 'image'; // text 또는 image만 허용
 
   @IsString()
+  @IsOptional()
   value?: string; // (선택적) type='text'일 경우
 
   @IsString()
+  @IsOptional()
   url?: string; // (선택적) type='image'일 경우
 
-  @IsNotEmpty()
+  @IsNumber()
+  @Type(() => Number)
   x: number;
 
-  @IsNotEmpty()
+  @IsNumber()
+  @Type(() => Number)
   y: number;
 }
 
