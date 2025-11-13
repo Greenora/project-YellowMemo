@@ -16,7 +16,7 @@ class ContentItemDto {
   url?: string; // (선택적) type='image'일 경우
 
   @IsNumber()
-  @Type(() => Number)
+  @Type(() => Number) 
   x: number;
 
   @IsNumber()
