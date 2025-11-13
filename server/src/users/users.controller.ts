@@ -9,7 +9,7 @@ import { ApiBearerAuth } from '@nestjs/swagger';
 export class UsersController {
   constructor(private readonly usersService: UsersService){}
 
-  // 내 정보 조회 API (GET /users/me)
+  // 내 정보 조회 API GET /users/me
   @Get('me') // 최종 주소는 GET /users/me
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))   //findme를 실행하기전에 반드시 통과해야함
