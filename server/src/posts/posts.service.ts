@@ -15,12 +15,13 @@ export class PostsService {
 
   //새 게시물 생성 로직 POST/posts
   async create(createPostDto: CreatePostDto, userId: number): Promise<Post>{
-    const {title, contents} = createPostDto;
+    const {title, contents, category} = createPostDto;
 
     // 새 post 엔티티 생성
     const newPost = this.postsRepository.create({
       title,
       contents,  // json 타입 컬럼에 배열 통째로 저장
+      category, // 카테고리 추가
       userId,    // 토큰에서 넘어온 ID 저장
     });
 
@@ -30,8 +31,9 @@ export class PostsService {
   }
 
   // 모든 게시물 조회  GET /posts
-  async findAll(): Promise<Post[]> {  //posts 테이블에서 모든 데이터를 찾고
+  async findAll(category?: string): Promise<Post[]> {  //posts 테이블에서 모든 데이터를 찾고
     return this.postsRepository.find({//user 관계(작성자 정보)를 join해서 같이 가져온다  
+      where: category? {category} : {}, //카테고리 필터링 조건 추가
       relations: ['user'],            //user 정보 중에 password-hash는 빼고 가져와야함! 통째로 가져오면 비밀버호가 딸려오니까
       select: {
         id: true,    //post.id
