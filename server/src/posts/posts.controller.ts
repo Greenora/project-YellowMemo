@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -6,7 +6,6 @@ import { AuthGuard } from '@nestjs/passport';
 import { User } from 'src/users/entities/user.entity';
 import type { Request } from 'express';
 import { ApiBearerAuth } from '@nestjs/swagger';
-
 
 @Controller('posts') //API 루트는 /posts 
 export class PostsController {
@@ -25,7 +24,7 @@ export class PostsController {
   }
 
   @Get()   //여긴 왜 UseGuards가 없냐면 누구나 조회 할 수 있어야하니까
-  findAll(@Query('category') category: string) {
+  findAll() {
     return this.postsService.findAll();
   }
 
