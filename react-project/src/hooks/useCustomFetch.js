@@ -4,7 +4,7 @@ const useCustomFetch = () => {
 
     const BASE_URL = process.env.REACT_APP_API_URL;
     console.log(BASE_URL)
-    const publicEndpoints = ["/auth/login", "/user/signup"];
+    const publicEndpoints = ["/auth/login", "/user/signup", "/auth/register"];
     const isPublicEndpoint = publicEndpoints.some(p => endpoint.startsWith(p));
 
     // 클라이언트에서만 token 가져오기
@@ -27,13 +27,15 @@ const useCustomFetch = () => {
   };
 
 
-    if (!token || isTokenExpired(token)) {
+    if (isTokenExpired(token)) {
       if (!isPublicEndpoint) {
         localStorage.removeItem("jwtToken");
         alert("세션이 만료되었습니다. 다시 로그인해주세요.");
         window.location.href = "/login";
         return { ok: false, status: 401, message: "세션 만료", data: null };
       }
+    } else if (!token) {
+      localStorage.removeItem("jwtToken");
     }
 
     // 3. API 요청 시 Authorization 헤더에 accessToken 추가(isPublicEndpoint 경로가 아닐 경우에)
