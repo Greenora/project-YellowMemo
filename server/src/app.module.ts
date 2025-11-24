@@ -5,6 +5,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { PostsModule } from './posts/posts.module';
 import { CommentsModule } from './comments/comments.module';
+import { MembersModule } from './members/members.module';
 
 
 @Module({
@@ -32,6 +33,7 @@ import { CommentsModule } from './comments/comments.module';
     UsersModule,
     PostsModule,
     CommentsModule,
+    MembersModule,
   ],
   controllers: [], //기본 컨트롤러/서비스는 안 씀
   providers: [],
