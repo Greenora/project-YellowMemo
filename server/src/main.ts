@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'; //Swagger 임포트
 import { ValidationPipe } from '@nestjs/common'; //ValidationPipe 임포트
+import { HttpExceptionFilter } from './filters/http-exception.filter'; //전역 예외 필터 임포트
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -23,6 +24,9 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document); // Swagger 주소는 /api
+
+  //전역 예외 필터 (모든 에러 메시지 통일)
+  app.useGlobalFilters(new HttpExceptionFilter());
 
   //유효성 검사 글로벌 파이프 (DTO 작동하게 함)
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
