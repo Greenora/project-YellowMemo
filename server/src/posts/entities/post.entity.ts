@@ -9,6 +9,9 @@ export class Post extends BaseEntity {
 
     @Column()
     title: string;
+    
+    @Column() //카테고리 추가 (게시판, 현지학기제)
+    category: string; 
 
     @Column({ type: 'json'}) //json 타입으로 저장
     contents: any; // 텍스트, 이미지 배열을 통째로 저장
