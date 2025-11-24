@@ -26,7 +26,8 @@ import { SemestersModule } from './semesters/semesters.module';
       password: process.env.DB_PASSWORD,
       database: process.env.DB_DATABASE,
       entities: [__dirname + '/**/*.entity{.ts,.js}'], // 엔티티 파일 자동 로드
-      synchronize: true, // true면 엔티티 기준으로 DB 테이블 자동 생성 (개발용)
+      synchronize: false, // true면 엔티티 기준으로 DB 테이블 자동 생성 (개발용)
+      migrationsRun: true, //앱 시작 시 마이그레이션 자동 실행
     }),
 
     //만든 모듈들
