@@ -14,7 +14,7 @@ import { JwtStrategy } from './jwt.strategy';
     JwtModule.register({         //JWT 모듈 등록 및 설정
       secret: 'YOUR_SECRET_KEY',  //임시 (나중에 .env)
       signOptions: {           
-        expiresIn: 3600, //토큰 만료 시간 (초)
+        expiresIn: '7d', //토큰 만료 시간 (초)
       },
     }),
     TypeOrmModule.forFeature([User]),], // auth 모듈이 user테이블을 쓸 수 있게 등록록
