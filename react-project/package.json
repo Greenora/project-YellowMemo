@@ -21,11 +21,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli",
-    "migration:generate": "npm run typeorm -- -d src/data-source.ts migration:generate",
-    "migration:run": "npm run typeorm -- -d src/data-source.ts migration:run",
-    "migration:revert": "npm run typeorm -- -d src/data-source.ts migration:revert"
+    "eject": "react-scripts eject"
   },
   "eslintConfig": {
     "extends": [
