@@ -31,9 +31,8 @@ export class PostsService {
   }
 
   // 모든 게시물 조회  GET /posts
-  async findAll(category?: string): Promise<Post[]> {  //posts 테이블에서 모든 데이터를 찾고
-    return this.postsRepository.find({//user 관계(작성자 정보)를 join해서 같이 가져온다  
-      where: category? {category} : {}, //카테고리 필터링 조건 추가
+  async findAll(): Promise<Post[]> {  //posts 테이블에서 모든 데이터를 찾고
+    return this.postsRepository.find({//user 관계(작성자 정보)를 join해서 같이 가져온다
       relations: ['user'],            //user 정보 중에 password-hash는 빼고 가져와야함! 통째로 가져오면 비밀버호가 딸려오니까
       select: {
         id: true,    //post.id
