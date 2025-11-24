@@ -6,6 +6,7 @@ import { UsersModule } from './users/users.module';
 import { PostsModule } from './posts/posts.module';
 import { CommentsModule } from './comments/comments.module';
 import { MembersModule } from './members/members.module';
+import { SemestersModule } from './semesters/semesters.module';
 
 
 @Module({
@@ -34,6 +35,7 @@ import { MembersModule } from './members/members.module';
     PostsModule,
     CommentsModule,
     MembersModule,
+    SemestersModule,
   ],
   controllers: [], //기본 컨트롤러/서비스는 안 씀
   providers: [],
