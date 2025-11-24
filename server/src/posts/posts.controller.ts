@@ -17,7 +17,7 @@ export class PostsController {
   @Post()
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt')) //토큰 인증 필수
-  @ApiCreatedResponse({ description: '게시물 생성 성공', schema: { example: { id: 42, title: '오사카 여행 메모', contents: [{ type: 'text', value: '첫 게시물입니다.', x: 120, y: 80 }], category: 'travel', userId: 7, createdAt: '2025-11-12T07:30:00.000Z' } } })
+  @ApiCreatedResponse({ description: '게시물 생성 성공', schema: { example: { id: 42, title: '오사카 여행 메모', contents: [{ type: 'text', value: '첫 게시물입니다.', x: 120, y: 80 }], userId: 7, createdAt: '2025-11-12T07:30:00.000Z' } } })
   create(
     @Req() req: Request,  //토큰에서 User 정보 가져온다
     @Body() createPostDto: CreatePostDto  //Body에서 DTO데이터를 가져오고
@@ -28,7 +28,7 @@ export class PostsController {
 
   @Get()   //여긴 왜 UseGuards가 없냐면 누구나 조회 할 수 있어야하니까
   @ApiOkResponse({ description: '모든 게시물 조회', schema: { example: [{ id: 42, title: '오사카 여행 메모', createdAt: '2025-11-12T07:30:00.000Z', user: { id: 7, nickname: '노란메모', image_url: 'https://cdn.yellowmemo.test/avatars/1.png' } }] } })
-  findAll(@Query('category') category: string) {
+  findAll() {
     return this.postsService.findAll();
   }
 

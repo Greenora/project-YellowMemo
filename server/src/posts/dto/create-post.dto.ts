@@ -37,11 +37,6 @@ export class CreatePostDto {
   @IsNotEmpty()
   title: string;
 
-  @ApiProperty({ description: '카테고리', example: '게시판' })
-  @IsString()
-  @IsNotEmpty()
-  category: string;
-
   @ApiProperty({
     description: '본문 콘텐츠 배열 (텍스트/이미지 스티커들)',
     type: () => [ContentItemDto],
