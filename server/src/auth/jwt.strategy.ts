@@ -4,6 +4,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { ExtractJwt, Strategy } from "passport-jwt";
 import { User } from "src/users/entities/user.entity";
 import { Repository } from "typeorm";
+import { ConfigService } from "@nestjs/config";
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -11,9 +12,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     constructor(
         @InjectRepository(User)
         private userRepository: Repository<User>,
+        private configService: ConfigService,
     ) {
         super({
-            secretOrKey: 'YOUR_SECRET_KEY',  //auth.module.ts의 비밀키와 똑같아야 함
+            secretOrKey: configService.getOrThrow<string>('JWT_SECRET'),  //auth.module.ts의 비밀키와 똑같아야 함
             jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(), //토큰을 'Bearer' 헤더에서 찾음
         });
     }
