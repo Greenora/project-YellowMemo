@@ -15,13 +15,12 @@ export class PostsService {
 
   //새 게시물 생성 로직 POST/posts
   async create(createPostDto: CreatePostDto, userId: number): Promise<Post>{
-    const {title, contents, category} = createPostDto;
+    const {title, contents} = createPostDto;
 
     // 새 post 엔티티 생성
     const newPost = this.postsRepository.create({
       title,
       contents,  // json 타입 컬럼에 배열 통째로 저장
-      category, // 카테고리 추가
       userId,    // 토큰에서 넘어온 ID 저장
     });
 
