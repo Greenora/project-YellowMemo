@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import TeamProfile from "../../components/TeamProfile";
 import Sidebar from "../../components/SideBar";
 import SidebarToggleBtn from "../../components/SidebarToggleButton";
+import Copyright from '../../components/Copyright';
 
 function OurTeam() {
   const [team, setTeam] = useState([]);
@@ -111,6 +112,7 @@ function OurTeam() {
           )}
         </div>
       </div>
+      <Copyright />
     </div>
   );
 }
