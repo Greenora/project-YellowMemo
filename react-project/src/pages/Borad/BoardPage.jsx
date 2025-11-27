@@ -3,6 +3,7 @@ import SidebarToggleBtn from "../../components/SidebarToggleButton";
 import { useState, useEffect, useRef } from "react";
 import useCustomFetch from "../../hooks/useCustomFetch";
 import { Link } from "react-router-dom";
+import ProfileIcon from "../../assets/sticky-note.png";
 
 export default function BoardPage() {
   const [showSide, setShowSide] = useState(false);
@@ -74,11 +75,15 @@ export default function BoardPage() {
                 {/* 오른쪽 - 닉네임 + 사진 */}
                 <div className="flex items-center text-right">
                   <p className="text-sm text-gray-600 mr-3">{post.user.nickname}</p>
-
                   <img
-                    src={post.image_url}
+                    src={post.user?.image_url || ProfileIcon}
                     alt={`${post.user.nickname}'s profile`}
                     className="w-6 h-6 rounded-full object-cover"
+                    onError={(e) => {
+                      if (e.target.src !== ProfileIcon) {
+                        e.target.src = ProfileIcon; 
+                      }
+                    }}
                   />
                 </div>
               </div>
