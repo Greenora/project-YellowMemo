@@ -26,6 +26,7 @@ import { useShare } from "../../hooks/useShare";
 import { handleAlertYes as deletePost } from "../../hooks/useDeletePost";
 import { handleDragEnd } from "../../hooks/useDragHandler";
 import { saveComment as saveCommentFn } from "../../hooks/useCommentPopup";
+import useCustomFetch from "../../hooks/useCustomFetch";
 
 // Post 페이지
 // 사용자가 만든 페이지를 보여주는 기능을 제공
@@ -110,6 +111,8 @@ export default function Post() {
 
   useOutsideClick(sidebarRef, setShowSide, setHoverId);
   const { onShareClick, handleShareYes, handleShareNo } = useShare(setShowShareAlert);
+
+  const customFetch = useCustomFetch();
 
   function goEdit() { nav(`/post/edit/${id}`); }
   function handleLogout() { localStorage.removeItem("userId"); }
@@ -289,29 +292,27 @@ export default function Post() {
         value={draftText} // 팝업 textarea에 표시할 텍스트
         onChange={setDraftText} // textarea 변경 시 draftText 업데이트
         onClose={() => setEditingId(null)} // × 클릭 시 편집 모드 종료
-        onSave={() => {
-          fetch(`http://localhost:5000/postit/${editingId}`, {
-            method: "PUT", // PUT 메서드 사용
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ 
-              ...postits.find(p => p.id === editingId), // 기존 post it 데이터
-              content: draftText // 수정된 내용 덮어쓰기
-            })
-          }).then(() => {
-            setPostits(ps => 
-              ps.map(p => 
-                p.id === editingId ? { ...p, content: draftText } : p // 로컬 post it 배열 순회하며 해당 아이디의 content만 교체
+        onSave={async () => {
+          const target = postits.find(p => p.id === editingId);
+
+          await customFetch(`/postit/${editingId}`, { method: "PUT" }, {
+            ...target,
+            content: draftText,
+          });
+
+          setPostits(ps =>
+            ps.map(p =>
+              p.id === editingId ? { ...p, content: draftText } : p // 로컬 post it 배열 순회하며 해당 아이디의 content만 교체
             )
-          ); 
-            setEditingId(null); // 편집 모드 종료
-          });
+          );
+          
+          setEditingId(null); // 편집 모드 종료
         }}
-        onDelete={() => { // 휴지통 버튼 클릭 시 서버에 DELETE, 로컬 상태에서 제거
-          fetch(`http://localhost:5000/postit/${editingId}`, { method: "DELETE" // DELETE 메서드 사용
-          }).then(() => {
-            setPostits(ps => ps.filter(p => p.id !== editingId)); // 해당 post it만 필터링
-            setEditingId(null); // 편집 모드 종료
-          });
+
+        onDelete={async () => {
+          await customFetch(`/postit/${editingId}`, { method: "DELETE" });
+
+          setPostits(ps => ps.filter(p => p.id !== editingId));
         }}
       />
 

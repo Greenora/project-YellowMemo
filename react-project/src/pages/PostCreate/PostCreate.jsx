@@ -5,7 +5,8 @@ import PostMenuBar from "../../components/PostMenuBar";
 import DiscardButton from "../../components/DiscardButton";
 import DraggableTextbox from "../../components/DraggableTextbox";
 import DraggableImage from "../../components/DraggableImage";
-import AlertPopup from "../../components/AlertPopup"; 
+import AlertPopup from "../../components/AlertPopup";
+import useCustomFetch from "../../hooks/useCustomFetch";
 
 // PostCreate 컴포넌트
 // 사용자로부터 텍스트박스와 이미지를 입력받아 포스트를 생성하는 기능을 제공
@@ -14,7 +15,7 @@ import AlertPopup from "../../components/AlertPopup";
 // DndContext를 사용하여 드래그 앤 드롭 기능 구현
 //DndContext는 dnd-kit 라이브러리에서 제공하는 컴포넌트로, 드래그 앤 드롭 기능을 활성화 함
 
-function PostCreate() {
+export default function PostCreate() {
   const fileInputRef = useRef(); // 이미지 업로드 input 참조
   const navigate = useNavigate(); // useNavigate 훅을 사용하여 페이지 이동
   const userId = Number(localStorage.getItem("userId")); // 사용자 ID 가져오기
@@ -22,6 +23,7 @@ function PostCreate() {
   const [images, setImages] = useState([]); // 이미지 상태
   const [editingId, setEditingId] = useState(null); // 현재 편집 중인 텍스트박스 ID(편집 모드 활성화 위해 사용)
   const [showAlert, setShowAlert] = useState(false); // 경고 팝업 표시 여부
+  const customFetch = useCustomFetch();
 
   // 텍스트박스 추가
   const handleAddTextbox = () => {
@@ -116,60 +118,52 @@ function PostCreate() {
   const handleAlertNo = () => setShowAlert(false); // 경고 팝업에서 "No" 클릭 시 팝업 닫기
 
   // 완료(저장) - DB에 POST 후 이동
-  const handleCheck = () => { 
-    fetch("http://localhost:5000/post", { 
-      method: "POST", 
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId }),
-    })
-      .then(res => res.json())
-      .then(postRes => {
-        const postId = postRes.id;
-        // 텍스트박스 저장 (id, postId 포함)
-        return Promise.all( 
-          textboxes.map(tb =>
-            fetch("http://localhost:5000/textbox", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                id: tb.id,
-                x: tb.x,
-                y: tb.y,
-                postId: postId,
-                content: tb.content,
-              }),
-            })
-          )
-        ).then(() =>
-          // 이미지 저장 (id, postId, z, width, height, src, userId 포함)
-          Promise.all(
-            images.map((img, idx) =>
-              fetch("http://localhost:5000/image", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  id: img.id,
-                  x: img.x,
-                  y: img.y,
-                  z: img.z ?? idx + 1,
-                  postId: postId,
-                  src: img.src,
-                  userId: img.userId,
-                }),
-              })
-            )
-          )
-        ).then(() => postId); // 모든 텍스트박스와 이미지 저장 후 postId 반환
-      })
-      .then((postId) => { // 모든 저장이 완료된 후
-        alert("생성 완료!");
-        navigate(`/post/${postId}`); // 생성된 포스트로 이동
-      })
-      .catch(() => { // 에러 처리
-        alert("에러가 발생했습니다.");
+  const handleCheck = async () => { 
+    try {
+      const postRes = await customFetch("/post", { 
+        method: "POST",
+        body: { userId }
       });
-  };
 
+      const postId = postRes.data.id;
+
+      await Promise.all(
+        textboxes.map(tb =>
+          customFetch("/textbox", {
+            method: "POST",
+            body: {
+              id: tb.id,
+              x: tb.x,
+              y: tb.y,
+              postId,
+              content: tb.content,
+            },
+          })
+        )
+      );
+
+      await Promise.all(
+        images.map((img, idx) =>
+          customFetch("/image", {
+            method: "POST",
+            body: {
+              id: img.id,
+              x: img.x,
+              y: img.y,
+              z: img.z ?? idx + 1,
+              postId,
+              userId: img.userId,
+            },
+          })
+        )
+      );
+
+      alert("생성 완료!");
+      navigate(`/post/${postId}`);
+    } catch (e) {
+      alert("에러가 발생했습니다.");
+    }
+  };
 
   return (
     <div className="relative min-h-screen bg-[#fcfcf8] p-4 overflow-hidden select-none">
@@ -237,5 +231,3 @@ function PostCreate() {
     </div>
   );
 }
-
-export default PostCreate;

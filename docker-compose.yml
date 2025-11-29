@@ -2,7 +2,7 @@ services:
   # NestJS 백엔드 
   server:
     build: ./server
-    container_name: girzday-server
+    container_name: Greenora-server
     ports:
       - "3000:3000"
     volumes:
@@ -11,18 +11,19 @@ services:
     env_file:
       - ./.env  # 루트의 .env 파일 사용
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
 
   # MySQL DB 
   mysql:
     image: mysql:8.0
-    container_name: girzday_mysql
+    container_name: Greenora_mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: skadnwns7188         #  나중에 바꿔
-      MYSQL_DATABASE: project_girzday
+      MYSQL_ROOT_PASSWORD: skadnwns7188         #
+      MYSQL_DATABASE: project_yellowmemo
       MYSQL_USER: appuser
-      MYSQL_PASSWORD: apppass_safe123         #  나중에 바꿔
+      MYSQL_PASSWORD: apppass_safe123         # 
     ports:
       - "3307:3306" # 3306 충돌 피해서 3307 포트 사용
     command: [
@@ -32,11 +33,18 @@ services:
     ]
     volumes:
       - db_data:/var/lib/mysql
+      - ./init_data.sql:/docker-entrypoint-initdb.d/init_data.sql
+    healthcheck:
+      test: ["CMD-SHELL", "mysql -h localhost -u appuser -papppass_safe123 -e 'SELECT 1'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   # React 프론트엔드 
   react:
     build: ./react-project
-    container_name: girzday-react
+    container_name: Greenora-react
     ports:
       - "3001:3000" # 백엔드 3000번과 충돌 피해서 3001 포트 사용
     volumes:
