@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import useCustomFetch from "../../hooks/useCustomFetch";
 import { Link } from "react-router-dom";
 import ProfileIcon from "../../assets/sticky-note.png";
+import useAuthRedirect from "../../hooks/useAuthRedirect";
+
 
 export default function BoardPage() {
   const [showSide, setShowSide] = useState(false);
@@ -11,6 +13,8 @@ export default function BoardPage() {
   const [posts, setPosts] = useState([]);
   const [error, setError] = useState("");
   const apiFetch = useCustomFetch();
+
+  useAuthRedirect();
 
   useEffect(() => {
     async function fetchPosts() {
