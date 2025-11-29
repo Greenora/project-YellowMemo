@@ -1,9 +1,9 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'; //Swagger 임포트
-import { ValidationPipe } from '@nestjs/common'; //ValidationPipe 임포트
-import { HttpExceptionFilter } from './filters/http-exception.filter'; //전역 예외 필터 임포트
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'; 
+import { ValidationPipe } from '@nestjs/common'; 
+import { HttpExceptionFilter } from './filters/http-exception.filter'; 
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
