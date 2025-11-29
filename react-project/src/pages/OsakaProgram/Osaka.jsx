@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import SidebarToggleButton from "../../components/SidebarToggleButton";
 import Sidebar from "../../components/SideBar";
 import JapanProgramDetail from "../../components/JapanProgramDetail";
-import Copyright from "../../components/Copyright";
 function OsakaPage() {
 
   const [programs, setPrograms] = useState([]);
@@ -125,7 +124,6 @@ function OsakaPage() {
           )}
         </div>
       </div>
-      <Copyright />
     </div>
   )
 }

@@ -48,9 +48,6 @@ lerna-debug.log*
 .project
 .classpath
 .c9/
-
-# Database dumps
-init_data.sql
 *.launch
 .settings/
 *.sublime-workspace

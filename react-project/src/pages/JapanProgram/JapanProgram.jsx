@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import JapanProgramDetail from '../../components/JapanProgramDetail';
 import Sidebar from "../../components/SideBar";
 import SidebarToggleBtn from "../../components/SidebarToggleButton";
-import Copyright from '../../components/Copyright';
 
 function JapanProgram() {
   const [programs, setPrograms] = useState([]);
@@ -124,7 +123,6 @@ function JapanProgram() {
           )}
         </div>
       </div>
-      <Copyright />
     </div>
   );
 }
