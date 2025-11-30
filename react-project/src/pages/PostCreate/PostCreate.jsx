@@ -24,6 +24,7 @@ export default function PostCreate() {
   const [editingId, setEditingId] = useState(null); // 현재 편집 중인 텍스트박스 ID(편집 모드 활성화 위해 사용)
   const [showAlert, setShowAlert] = useState(false); // 경고 팝업 표시 여부
   const customFetch = useCustomFetch();
+  const [title, setTitle] = useState("no title");
 
   // 텍스트박스 추가
   const handleAddTextbox = () => {
@@ -118,46 +119,43 @@ export default function PostCreate() {
   const handleAlertNo = () => setShowAlert(false); // 경고 팝업에서 "No" 클릭 시 팝업 닫기
 
   // 완료(저장) - DB에 POST 후 이동
-  const handleCheck = async () => { 
+  const handleCheck = async () => {
+    // textbox data 변환
+    const textContents = textboxes.map((tb) => ({
+      type: "text",
+      value: tb.content,
+      x: tb.x,
+      y: tb.y,
+    }));
+
+    // image data 변환
+    const imageContents = images.map((img) => ({
+      type: "image",
+      url: img.src,
+      x: img.x,
+      y: img.y,
+    }));
+
+    const autoTitle = (textboxes.length > 0 && textboxes[0].content.trim() !== "") ? textboxes[0].content
+    : "no title";
+
+    // contents 배열로 병합
+    const requestBody = {
+      title: autoTitle,
+      contents: [...textContents, ...imageContents],
+    };
+
     try {
-      const postRes = await customFetch("/post", { 
+      const response = await customFetch("/posts", {
         method: "POST",
-        body: { userId }
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
       });
 
-      const postId = postRes.data.id;
-
-      await Promise.all(
-        textboxes.map(tb =>
-          customFetch("/textbox", {
-            method: "POST",
-            body: {
-              id: tb.id,
-              x: tb.x,
-              y: tb.y,
-              postId,
-              content: tb.content,
-            },
-          })
-        )
-      );
-
-      await Promise.all(
-        images.map((img, idx) =>
-          customFetch("/image", {
-            method: "POST",
-            body: {
-              id: img.id,
-              x: img.x,
-              y: img.y,
-              z: img.z ?? idx + 1,
-              postId,
-              userId: img.userId,
-            },
-          })
-        )
-      );
-
+      const postId = response.data.id;
+      
       alert("생성 완료!");
       navigate(`/post/${postId}`);
     } catch (e) {
