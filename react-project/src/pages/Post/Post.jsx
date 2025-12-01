@@ -18,8 +18,8 @@ import DeleteIcon from "../../assets/discardbutton_trash.svg";
 import NoteBg from "../../assets/sticky-note.png";
 
 import usePostOwner from "../../hooks/usePostOwner";
-import useTextboxes from "../../hooks/useTextboxes";
-import useImages from "../../hooks/useImages";
+// import useTextboxes from "../../hooks/useTextboxes";
+// import useImages from "../../hooks/useImages";
 import usePostits from "../../hooks/usePostits";
 import useOutsideClick from "../../hooks/useOutsideClick";
 import { useShare } from "../../hooks/useShare";
@@ -97,6 +97,9 @@ export default function Post() {
   const [openCmt, setOpenCmt] = useState(false); // 포스트잇 생성 팝업 열기 여부
   const [commentText, setCommentText] = useState(""); // 포스트잇 입력창 내용
   const [showAlert, setShowAlert] = useState(false); // 삭제 확인 알림창 표시 여부
+  const [textboxes, setTextboxes] = useState([]);
+  const [images, setImages] = useState([]);
+
 
   const [hoverId, setHoverId] = useState(null); // 현재 마우스 올린 Post it의 ID (... 버튼 노출 제어용)
   const [editingId, setEditingId] = useState(null); // 편집 중인 Post it의 ID (어떤 post it을 수정할지)
@@ -106,8 +109,8 @@ export default function Post() {
 
   const ownerId = usePostOwner(id); // 현재 Post의 작성자 userId
   const isOwner = ownerId === myId; // 현재 사용자가 post 소유자인지 확인
-  const [textboxes] = useTextboxes(id); // text box 상태
-  const [images] = useImages(id); // image 상태
+  // const [textboxes] = useTextboxes(id); // text box 상태
+  // const [images] = useImages(id); // image 상태
   const [postits, setPostits] = usePostits(id); // post it 상태
 
   useOutsideClick(sidebarRef, setShowSide, setHoverId);
@@ -122,24 +125,44 @@ export default function Post() {
   function handleAlertNo() { setShowAlert(false); }
 
   useEffect(() => {
-    const fetchMyInfo = async () => {
+    const fetchAllData = async () => {
       try {
-        if (!localStorage.getItem("jwtToken"))
-          return;
-
-        const res = await customFetch('/users/me', { method: "GET" });
-        const data = res.data;
-
-        if (data && data.id) {
-          setMyId(data.id);
+        if (!localStorage.getItem("jwtToken")) {
+          const userRes = await customFetch('/users/me', { method: "GET" });
+          const userData = userRes.data;
+          if (userData && userData.id) {
+            setMyId(userData.id);
+          };
         }
+
+        const postRes = await customFetch(`/posts/${id}`, { method: "GET" });
+        const postData = postRes.data;
+        const contents = postData.contents || [];
+
+        const loadedTextboxes = contents
+          .filter(item => item.type === 'text')
+          .map((item, index) => ({
+            ...item,
+            id: item.id || `tb${index}`,
+            content: item.value
+          }));
+
+        const loadedImages = contents
+          .filter(item => item.type === 'image')
+          .map((item, index) => ({
+            ...item,
+            id: item.id || `img${index}`,
+            src: item.url }));
+
+        setTextboxes(loadedTextboxes);
+        setImages(loadedImages);
       } catch (error) {
         console.error("내 정보 불러오기 실패:", error);
       }
     };
 
-    fetchMyInfo();
-  }, [customFetch]);
+    fetchAllData();
+  }, [id, customFetch]);
 
   const saveComment = async () => {
     // 빈 내용 방지
@@ -306,7 +329,7 @@ export default function Post() {
 
           {/* 이미지 */}
           {images.map((img, i) => ( // 이미지 배열 순회하며 렌더링
-            <div key={img.id} style={{ 
+            <div key={`img${img.id}`} style={{ 
               position: "absolute", 
               left: img.x, top: img.y, 
               width: img.width || 200, height: img.height || 200, zIndex: img.zIndex ?? i + 50  // z 인덱스, 없으면 index + 50으로 설정
