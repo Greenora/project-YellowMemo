@@ -24,8 +24,8 @@ import usePostits from "../../hooks/usePostits";
 import useOutsideClick from "../../hooks/useOutsideClick";
 import { useShare } from "../../hooks/useShare";
 import { handleAlertYes as deletePost } from "../../hooks/useDeletePost";
-import { handleDragEnd } from "../../hooks/useDragHandler";
-import { saveComment as saveCommentFn } from "../../hooks/useCommentPopup";
+// import { handleDragEnd } from "../../hooks/useDragHandler";
+// import { saveComment as saveCommentFn } from "../../hooks/useCommentPopup";
 import useCustomFetch from "../../hooks/useCustomFetch";
 
 // Post 페이지
@@ -88,9 +88,10 @@ function PostTextbox({ content }) {
 
 export default function Post() {
   const { id } = useParams(); // useParams 훅을 사용해서 현재 URL 파라미터에서의 ID 값을 id 변수에 저장
-  const nav = useNavigate(); // useNavigate 훅 사용해서 페이지 이동
-  const myId = Number(localStorage.getItem("userId") || 0); // userID로 저장된 값을 localStorage에서 꺼내서 number로 변환, userId가 없다면 0 반환
+  const navigate = useNavigate(); // useNavigate 훅 사용해서 페이지 이동
+  const customFetch = useCustomFetch();
 
+  const [myId, setMyId] = useState(0);
   const [showSide, setShowSide] = useState(false); // side-bar 표시 여부
   const [showShareAlert, setShowShareAlert] = useState(false); // 공유 알림 팝업 표시 여부
   const [openCmt, setOpenCmt] = useState(false); // 포스트잇 생성 팝업 열기 여부
@@ -112,16 +113,107 @@ export default function Post() {
   useOutsideClick(sidebarRef, setShowSide, setHoverId);
   const { onShareClick, handleShareYes, handleShareNo } = useShare(setShowShareAlert);
 
-  const customFetch = useCustomFetch();
-
-  function goEdit() { nav(`/post/edit/${id}`); }
-  function handleLogout() { localStorage.removeItem("userId"); }
+  function goEdit() { navigate(`/post/edit/${id}`); }
+  function handleLogout() {
+    localStorage.removeItem("jwtToken");
+    navigate('/');
+  }
   function onDiscard() { setShowAlert(true); }
   function handleAlertNo() { setShowAlert(false); }
 
-  function saveComment() {
-    saveCommentFn({ commentText, setPostits, postits, myId, setOpenCmt, setCommentText, NoteBg, postId: id });
+  useEffect(() => {
+    const fetchMyInfo = async () => {
+      try {
+        if (!localStorage.getItem("jwtToken"))
+          return;
+
+        const res = await customFetch('/users/me', { method: "GET" });
+        const data = res.data;
+
+        if (data && data.id) {
+          setMyId(data.id);
+        }
+      } catch (error) {
+        console.error("내 정보 불러오기 실패:", error);
+      }
+    };
+
+    fetchMyInfo();
+  }, [customFetch]);
+
+  const saveComment = async () => {
+    // 빈 내용 방지
+    if (!commentText.trim()) return;
+
+    try {
+      const res = await customFetch(`/posts/${id}/comments`, {
+        method: "POST",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: commentText,
+          x: Math.round(100 + Math.random()*50),
+          y: Math.round(100 + Math.random()*50),
+        }),
+      });
+
+      // 상태 업데이트
+      const newCommentData = res.data;
+
+      const newPostit = {
+        ...newCommentData,
+        content: newCommentData.text,
+        userId: newCommentData.user?.id || myId,
+      };
+
+      setPostits((prev) => [...prev, newPostit]);
+
+      setCommentText("");
+      setOpenCmt(false);
+    } catch (error) {
+      console.error("댓글 저장 실패:", error);
+      alert("댓글 저장 중 오류가 발생했습니다.🥲");
+    }
   }
+
+  const handleDragEnd = async (event) => {
+    const { active, delta } = event;
+    
+    // 드래그 대상이 없거나, 이동 거리가 없으면 종료
+    if (!active || !delta || (delta.x === 0 && delta.y === 0)) return;
+
+    const activeId = active.id;
+    const currentItem = postits.find(p => String(p.id) === String(activeId));
+
+    // 포스트잇 목록에 없는 건 무시
+    if (!currentItem) {
+      console.error("드래그 대상을 찾을 수 없습니다. ID:", activeId);
+      return;
+    };
+
+    const newX = Math.round(currentItem.x + delta.x);
+    const newY = Math.round(currentItem.y + delta.y);
+
+    setPostits(prev => prev.map(pt =>
+      pt.id === activeId ? { ...pt, x: newX, y: newY } : pt
+    ));
+
+    if (Number(currentItem.userId) === Number(myId)) {
+      try {
+        await customFetch(`/posts/${id}/comments/${activeId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            x: newX,
+            y: newY,
+            text: currentItem.content
+          }),
+        });
+      } catch (error) {
+        console.error("위치 저장 실패:", error);
+        alert("위치 저장에 실패했습니다.")
+      }
+    }
+  };
 
   return (
     <div className="relative min-h-screen bg-[#fcfcf8] p-4 overflow-hidden select-none">
@@ -142,12 +234,12 @@ export default function Post() {
 
       <div className="relative w-full h-[90vh] overflow-hidden z-[0]">
         {/* DndContext로 drag and drop 기능 활성화 */}
-        <DndContext onDragEnd={(e) => handleDragEnd(e, myId, postits, setPostits)}>
+        <DndContext onDragEnd={handleDragEnd}>
 
           {/* 텍스트박스 */}
           {textboxes.map((tb, i) => (
             <div 
-              key={tb.id} 
+              key={`tb${tb.id}`} 
               style={{ 
                 position: "absolute", 
                 left: tb.x, 
@@ -158,14 +250,14 @@ export default function Post() {
               tabIndex={0} 
               className="group"
             >
-              <PostTextbox content={tb.content} />
+              <PostTextbox content={tb.value} />
             </div>
           ))}
 
           {/* 포스트잇 */}
           <div className="absolute inset-0 z-[500]"> {/* inset-0은 top, right, left, bottom: 0을 한 번에 지정 */}
             {postits.map((pt, i) => ( // 포스트잇 배열을 순회하며 렌더링
-              <Drag key={pt.id} id={pt.id} position={{ x: pt.x, y: pt.y }}>
+              <Drag key={`pt${pt.id}`} id={pt.id} position={{ x: pt.x, y: pt.y }}>
                 <div
                   style={{
                     backgroundImage: `url(${NoteBg})`, // 포스트잇 배경 이미지
@@ -199,7 +291,7 @@ export default function Post() {
                         e.stopPropagation(); // 부모(Drag 컴포넌트)로 전파되는 걸 차단
                         e.preventDefault(); // 기본 드래그 동작 차단
                       }}
-                      onClick={() => { 
+                      onClick={() => {
                         setEditingId(pt.id); /* 어떤 포스트잇을 편집할지 ID를 기억 */
                       setDraftText(pt.content); /* 편집 팝업 안의 textarea에 원래 내용을 채워 넣음 */
                       }}
@@ -272,7 +364,7 @@ export default function Post() {
         <AlertPopup 
           show={showAlert} 
           message="정말로 삭제하시겠습니까?" 
-          onYes={() => deletePost({ textboxes, images, postits, id, setShowAlert, nav })}  // Yes 클릭 시 호출
+          onYes={() => deletePost({ id, setShowAlert, navigate, customFetch })}  // Yes 클릭 시 호출
           onNo={handleAlertNo} // No 클릭 시 호출
         />
       }
@@ -293,25 +385,31 @@ export default function Post() {
         onChange={setDraftText} // textarea 변경 시 draftText 업데이트
         onClose={() => setEditingId(null)} // × 클릭 시 편집 모드 종료
         onSave={async () => {
-          const target = postits.find(p => p.id === editingId); // 기존 post it 데이터
+          try {
+            await customFetch(`/posts/${id}/comments/${editingId}`, {
+              method: "PATCH",
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ text: draftText })
+            });
 
-          await customFetch(`/postit/${editingId}`, { method: "PUT" }, {
-            ...target,
-            content: draftText, // 수정된 내용 덮어쓰기
-          });
-
-          setPostits(ps => ps.map(p =>
-            p.id === editingId ? { ...p, content: draftText } : p) // 로컬 post it 배열 순회하며 해당 아이디의 content만 교체
-          );
-
-          setEditingId(null); // 편집 모드 종료
+            setPostits(ps => ps.map(p =>
+              p.id === editingId ? { ...p, content: draftText } : p)
+            );
+            setEditingId(null);
+          } catch (e) {
+            console.error("수정 실패", e)
+          }
         }}
 
         onDelete={async () => {
-          customFetch(`/postit/${editingId}`, { method: "DELETE" })
+          try {
+            await customFetch(`/posts/${id}/comments/${editingId}`, { method: "DELETE" });
 
-          await setPostits(ps => ps.filter(p => p.id !== editingId)); // 해당 post it만 필터링
-          setEditingId(null); // 편집 모드 종료
+            setPostits(ps => ps.filter(p => p.id !== editingId)); // 해당 post it만 필터링
+            setEditingId(null); // 편집 모드 종료
+          } catch (e) {
+          console.error("삭제 실패", e);
+          }
         }}
       />
 
