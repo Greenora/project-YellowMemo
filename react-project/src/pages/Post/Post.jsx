@@ -17,7 +17,7 @@ import EditIcon from "../../assets/sidebar_pencil.svg";
 import DeleteIcon from "../../assets/discardbutton_trash.svg";
 import NoteBg from "../../assets/sticky-note.png";
 
-import usePostOwner from "../../hooks/usePostOwner";
+// import usePostOwner from "../../hooks/usePostOwner";
 // import useTextboxes from "../../hooks/useTextboxes";
 // import useImages from "../../hooks/useImages";
 import usePostits from "../../hooks/usePostits";
@@ -99,6 +99,7 @@ export default function Post() {
   const [showAlert, setShowAlert] = useState(false); // 삭제 확인 알림창 표시 여부
   const [textboxes, setTextboxes] = useState([]);
   const [images, setImages] = useState([]);
+  const [postOwnerId, setPostOwnerId] = useState(null); // 게시글 작성자 ID
 
 
   const [hoverId, setHoverId] = useState(null); // 현재 마우스 올린 Post it의 ID (... 버튼 노출 제어용)
@@ -107,8 +108,8 @@ export default function Post() {
 
   const sidebarRef = useRef(null); // SideBar 컴포넌트의 DOM 요소를 참조
 
-  const ownerId = usePostOwner(id); // 현재 Post의 작성자 userId
-  const isOwner = ownerId === myId; // 현재 사용자가 post 소유자인지 확인
+  // const ownerId = usePostOwner(id); // 현재 Post의 작성자 userId
+  const isOwner = myId !== 0 && myId === postOwnerId; // 현재 사용자가 post 소유자인지 확인
   // const [textboxes] = useTextboxes(id); // text box 상태
   // const [images] = useImages(id); // image 상태
   const [postits, setPostits] = usePostits(id); // post it 상태
@@ -137,6 +138,9 @@ export default function Post() {
 
         const postRes = await customFetch(`/posts/${id}`, { method: "GET" });
         const postData = postRes.data;
+
+        setPostOwnerId(postData.user?.id);
+
         const contents = postData.contents || [];
 
         const loadedTextboxes = contents
