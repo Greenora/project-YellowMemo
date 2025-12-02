@@ -1,10 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, HttpCode } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, HttpCode, ForbiddenException, Req } from '@nestjs/common';
 import { SemestersService } from './semesters.service';
 import { CreateSemesterDto } from './dto/create-semester.dto';
 import { UpdateSemesterDto } from './dto/update-semester.dto';
 import { AuthGuard } from '@nestjs/passport';
+import type { Request } from 'express';
+import type { User } from 'src/users/entities/user.entity';
 import { ApiBearerAuth, ApiTags, ApiCreatedResponse, ApiOkResponse, ApiNoContentResponse } from '@nestjs/swagger';
-
 
 @ApiTags('Semesters')
 @Controller('semesters')
@@ -19,14 +20,21 @@ export class SemestersController {
     schema: {
       example: {
         id: 1,
+        type: 'semester_info',
         title: '2024년 봄학기 오사카 현지학기제',
         content: '오사카에서 진행되는 현지학기제 프로그램입니다. 일본 문화 체험과 언어 학습을 병행하며, 현지 대학과의 교류를 통해 글로벌 역량을 키울 수 있습니다.',
         imageUrl: 'https://example.com/images/osaka-semester-2024.jpg',
-        createdAt: '2024-03-15T09:00:00.000Z'
+        createdAt: '2024-03-15T09:00:00.000Z',
       }
     }
   })
-  create(@Body() createSemesterDto: CreateSemesterDto) {
+  create(@Body() createSemesterDto: CreateSemesterDto, @Req() req: Request) {
+    const user = req.user as User;
+    
+    // semester_info 타입은 admin만 작성 가능
+    if (createSemesterDto.type === 'semester_info' && user.username !== 'admin') {
+      throw new ForbiddenException('현지학기제 소개는 관리자만 작성할 수 있습니다.');
+    }
     return this.semestersService.create(createSemesterDto);
   }
 
@@ -54,6 +62,26 @@ export class SemestersController {
   })
   findAll() {
     return this.semestersService.findAll();
+  }
+
+  @Get(':type')
+  @ApiOkResponse({ 
+    description: '특정 타입의 현지학기제 정보를 조회합니다.',
+    schema: {
+      example: [
+        {
+          id: 1,
+          type: 'semester_info',
+          title: '2024년 봄학기 오사카 현지학기제',
+          content: '오사카에서 진행되는 현지학기제 프로그램입니다.',
+          imageUrl: 'https://example.com/images/osaka-semester-2024.jpg',
+          createdAt: '2024-03-15T09:00:00.000Z'
+        }
+      ]
+    }
+  })
+  findType(@Param('type') type: string) {
+    return this.semestersService.findType(type);
   }
 
   @Get(':id')
