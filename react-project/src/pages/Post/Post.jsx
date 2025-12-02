@@ -127,7 +127,7 @@ export default function Post() {
   useEffect(() => {
     const fetchAllData = async () => {
       try {
-        if (!localStorage.getItem("jwtToken")) {
+        if (localStorage.getItem("jwtToken")) {
           const userRes = await customFetch('/users/me', { method: "GET" });
           const userData = userRes.data;
           if (userData && userData.id) {
