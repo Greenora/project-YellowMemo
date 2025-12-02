@@ -24,7 +24,6 @@ export default function PostCreate() {
   const [editingId, setEditingId] = useState(null); // 현재 편집 중인 텍스트박스 ID(편집 모드 활성화 위해 사용)
   const [showAlert, setShowAlert] = useState(false); // 경고 팝업 표시 여부
   const customFetch = useCustomFetch();
-  const [title, setTitle] = useState("no title");
 
   // 텍스트박스 추가
   const handleAddTextbox = () => {
