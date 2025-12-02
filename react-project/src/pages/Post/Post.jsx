@@ -273,7 +273,7 @@ export default function Post() {
               tabIndex={0} 
               className="group"
             >
-              <PostTextbox content={tb.value} />
+              <PostTextbox content={tb.content} />
             </div>
           ))}
 
