@@ -4,10 +4,12 @@ import AuthInputBox from "../../components/AuthInputBox";
 import CustomButton from "../../components/CustomButton.jsx";
 import Copyright from "../../components/Copyright.jsx";
 import useCustomFetch from "../../hooks/useCustomFetch";
+import { useAuth } from "../../hooks/useAuthContext"; // 추가
 
 export default function Login() {
   const navigate = useNavigate();
   const customFetch = useCustomFetch();
+  const { login } = useAuth(); // AuthProvider에서 login 가져오기
 
   const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
@@ -18,7 +20,6 @@ export default function Login() {
     try {
       setError("");
 
-      // 1. 로그인 요청
       const res = await customFetch("/auth/login", {
         method: "POST",
         body: JSON.stringify({ username: loginId, password }),
@@ -30,15 +31,21 @@ export default function Login() {
       }
 
       const accessToken = res.data.accessToken;
-      localStorage.setItem("jwtToken", accessToken);
 
-      await navigate(`/board`)
+      // 1️⃣ Auth 상태 업데이트
+      login(accessToken);
+
+      // 2️⃣ 상태가 반영된 후 navigate
+      setTimeout(() => {
+        navigate("/board", { replace: true });
+      }, 0);
+
     } catch (err) {
       setError("로그인 중 오류 발생");
       console.error(err);
     }
   };
- 
+
   // 토큰 만료 확인 함수
   const isTokenExpired = (token) => {
     try {
@@ -53,20 +60,14 @@ export default function Login() {
   const redirectIfLoggedIn = useCallback(() => {
     const token = localStorage.getItem("jwtToken");
 
-    // 토큰 없을 경우 로그인 페이지로
     if (!token || isTokenExpired(token)) {
       localStorage.removeItem("jwtToken");
       navigate("/login", { replace: true });
       return;
     }
 
-    // 토큰 유효할 경우 보드로
     navigate("/board", { replace: true });
   }, [navigate]);
-
-  // localStorage에 만료된 토큰 존재 → /board로 이동하려고 시도 → 
-  // /board에서 API 요청하면 useCustomFetch가 만료된 토큰을 인지 → 로컬스토리지 토큰 삭제 → 다시 로그인으로보냄
-  // ^^^ 위와 같은 흐름으로 가면 UX 불편, 위와 같은 토큰만료 검사를 로그인 페이지에서도 하도록 함
 
   useEffect(() => {
     redirectIfLoggedIn();
