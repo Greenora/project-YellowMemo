@@ -14,6 +14,8 @@ import OsakaPage from './pages/OsakaProgram/Osaka';
 import BoardPage from './pages/Borad/BoardPage';
 import { AuthProvider } from './hooks/useAuthContext';
 import AdminPage from './pages/Admin/AdminPage';
+import AdminSemesterPage from './pages/Admin/AdminSemesterPage';
+import AdminMemberPage from './pages/Admin/AdminMemberPage';
 
 function App() {
   return (
@@ -32,7 +34,8 @@ function App() {
           <Route path="/osaka-introduce" element={<OsakaPage />} />
           <Route path="/board" element={<BoardPage />} />
           <Route path="/admin" element={<AdminPage />} />
-
+          <Route path="/admin/semester" element={<AdminSemesterPage />} />
+          <Route path="/admin/member" element={<AdminMemberPage />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
