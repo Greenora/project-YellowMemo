@@ -121,6 +121,7 @@ export default function Register() {
         )}
 
         <CustomButton
+          type="submit"
           onClick={handleRegister}
           className="w-[180px] h-14 bg-white text-black rounded-full shadow-[0_2px_8px_0_rgba(0,0,0,0.08)] font-normal text-lg mt-4 mb-6"
         >
