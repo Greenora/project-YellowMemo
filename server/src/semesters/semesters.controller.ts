@@ -32,7 +32,7 @@ export class SemestersController {
     const user = req.user as User;
     
     // semester_info 타입은 admin만 작성 가능
-    if (createSemesterDto.type === 'semester_info' && user.username !== 'admin') {
+    if (createSemesterDto.type === 'semester_info' && user.role !== 'admin') {
       throw new ForbiddenException('현지학기제 소개는 관리자만 작성할 수 있습니다.');
     }
     return this.semestersService.create(createSemesterDto);
@@ -64,9 +64,9 @@ export class SemestersController {
     return this.semestersService.findAll();
   }
 
-  @Get(':type')
+  @Get('type/:type')
   @ApiOkResponse({ 
-    description: '특정 타입의 현지학기제 정보를 조회합니다.',
+    description: '특정 타입의 현지학기제 정보를 조회합니다. (osaka_review 또는 semester_info)',
     schema: {
       example: [
         {

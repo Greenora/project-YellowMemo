@@ -21,7 +21,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
 
     //검사 로직( 토큰이 유효할 때만 실행됨)
-    async validate(payload: {username: string; sub: number}): Promise<User>{
+    async validate(payload: {username: string; sub: number; role: 'user' | 'admin'}): Promise<User>{
         const {username} = payload;
         const user = await this.userRepository.findOne({
             where: {username},
