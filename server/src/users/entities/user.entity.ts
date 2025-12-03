@@ -42,6 +42,14 @@ export class User extends BaseEntity {
     image_url: string;
 
     @ApiProperty({
+        description: "사용자 권한",
+        example: "user",
+        enum: ['user', 'admin'],
+    })
+    @Column({ default: 'user' })
+    role: 'user' | 'admin';
+
+    @ApiProperty({
         description: "계정 생성 일시",
         example: "2025-11-12T07:30:00.000Z",
     })
