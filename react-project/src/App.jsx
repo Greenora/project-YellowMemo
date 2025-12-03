@@ -13,6 +13,7 @@ import JapanProgram from "./pages/JapanProgram/JapanProgram";
 import OsakaPage from './pages/OsakaProgram/Osaka';
 import BoardPage from './pages/Borad/BoardPage';
 import { AuthProvider } from './hooks/useAuthContext';
+import AdminPage from './pages/Admin/AdminPage';
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
           <Route path="/program-introduce" element={<JapanProgram />} />
           <Route path="/osaka-introduce" element={<OsakaPage />} />
           <Route path="/board" element={<BoardPage />} />
+          <Route path="/admin" element={<AdminPage />} />
 
         </Routes>
       </BrowserRouter>
