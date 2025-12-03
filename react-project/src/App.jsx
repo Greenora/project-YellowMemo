@@ -12,25 +12,28 @@ import OurTeam from "./pages/OurTeam/OurTeam";
 import JapanProgram from "./pages/JapanProgram/JapanProgram";
 import OsakaPage from './pages/OsakaProgram/Osaka';
 import BoardPage from './pages/Borad/BoardPage';
+import { AuthProvider } from './hooks/useAuthContext';
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/post/:id" element={<Post />} />
-        <Route path="/post/edit/:id" element={<PostEdit />} />
-        <Route path="/post/create" element={<PostCreate />} />
-        <Route path="/our-team" element={<OurTeam />} />
-        <Route path="/program-introduce" element={<JapanProgram />} />
-        <Route path="/osaka-introduce" element={<OsakaPage />} />
-        <Route path="/board" element={<BoardPage />} />
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/post/:id" element={<Post />} />
+          <Route path="/post/edit/:id" element={<PostEdit />} />
+          <Route path="/post/create" element={<PostCreate />} />
+          <Route path="/our-team" element={<OurTeam />} />
+          <Route path="/program-introduce" element={<JapanProgram />} />
+          <Route path="/osaka-introduce" element={<OsakaPage />} />
+          <Route path="/board" element={<BoardPage />} />
 
-      </Routes>
-    </BrowserRouter>
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 

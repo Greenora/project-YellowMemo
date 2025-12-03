@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import StickyNote from "../../assets/sticky-note.png";
 import FadeInOnScroll from "../../components/FadeInOnScroll"; // 앞서 안내한 스크롤 효과 컴포넌트
 import Copyright from "../../components/Copyright";
 
 function Home() {
   const [step, setStep] = useState("note");
-  const navigate = useNavigate();
   const [showCopyright, setShowCopyright] = useState(true);
   
   // 페이지가 로드될 때 스크롤 위치를 맨 위로 설정하고, 스크롤 복원 방지
@@ -41,40 +39,6 @@ function Home() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
-  const handleNoteClick = async () => {
-    setStep("started");
-    const userId = localStorage.getItem('userId');
-    if (userId) {
-      try {
-        const res = await fetch("http://localhost:5000/post");
-        const posts = await res.json();
-        const maxPost = posts.reduce((max, cur) =>
-          Number(cur.id) > Number(max.id) ? cur : max, posts[0]
-        );
-        setTimeout(() => {
-          setStep("fade");
-          setTimeout(() => {
-            navigate(`/post/${maxPost.id}`);
-          }, 1000);
-        }, 2000);
-      } catch (e) {
-        setTimeout(() => {
-          setStep("fade");
-          setTimeout(() => {
-            navigate("/login");
-          }, 1000);
-        }, 2000);
-      }
-    } else {
-      setTimeout(() => {
-        setStep("fade");
-        setTimeout(() => {
-          navigate("/login");
-        }, 1000);
-      }, 2000);
-    }
-  };
 
   return (
     <div className="w-full min-h-screen bg-[#fcfcf8]">
@@ -114,7 +78,6 @@ function Home() {
               style={{
                 transformOrigin: "top center",
               }}
-              onClick={handleNoteClick}
             />
           )}
           {step !== "note" && (
