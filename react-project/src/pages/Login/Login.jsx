@@ -4,19 +4,31 @@ import AuthInputBox from "../../components/AuthInputBox";
 import CustomButton from "../../components/CustomButton.jsx";
 import Copyright from "../../components/Copyright.jsx";
 import useCustomFetch from "../../hooks/useCustomFetch";
-import { useAuth } from "../../hooks/useAuthContext"; // 추가
+import { useAuth } from "../../hooks/useAuthContext";
 
 export default function Login() {
   const navigate = useNavigate();
   const customFetch = useCustomFetch();
-  const { login } = useAuth(); // AuthProvider에서 login 가져오기
+  const { login } = useAuth();
 
   const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  // 로그인 시도 함수
-  const handleLogin = async () => {
+  // 토큰 만료 확인 함수 (재사용)
+  const isTokenExpired = (token) => {
+    if (!token) return true;
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      return Date.now() >= payload.exp * 1000;
+    } catch {
+      return true;
+    }
+  };
+
+  const handleLogin = async (e) => {
+    if (e) e.preventDefault(); 
+    
     try {
       setError("");
 
@@ -32,10 +44,10 @@ export default function Login() {
 
       const accessToken = res.data.accessToken;
 
-      // 1️⃣ Auth 상태 업데이트
+      // Auth 상태 업데이트
       login(accessToken);
 
-      // 2️⃣ 상태가 반영된 후 navigate
+      // 상태가 반영된 후 /board로 이동
       setTimeout(() => {
         navigate("/board", { replace: true });
       }, 0);
@@ -46,23 +58,13 @@ export default function Login() {
     }
   };
 
-  // 토큰 만료 확인 함수
-  const isTokenExpired = (token) => {
-    try {
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      return Date.now() >= payload.exp * 1000;
-    } catch {
-      return true;
-    }
-  };
-
-  // 로그인 상태면 보드로 자동 리다이렉트
+  // 로그인 상태면 /board로 자동 리다이렉트 (로그아웃 충돌 해결)
   const redirectIfLoggedIn = useCallback(() => {
     const token = localStorage.getItem("jwtToken");
 
     if (!token || isTokenExpired(token)) {
       localStorage.removeItem("jwtToken");
-      navigate("/login", { replace: true });
+      // 토큰이 없으면 /login에 머무름
       return;
     }
 

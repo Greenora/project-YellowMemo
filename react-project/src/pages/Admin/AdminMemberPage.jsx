@@ -1,11 +1,9 @@
-// src/pages/AdminMemberPage.jsx
-
 import React, { useState, useEffect } from "react";
 import useCustomFetch from "../../hooks/useCustomFetch";
-import AdminHeader from "../../components/AdminHeader"; // AdminHeader가 페이지 전환을 관리한다고 가정
+import AdminHeader from "../../components/AdminHeader"; 
+import ProfileIcon from "../../assets/sticky-note.png"; // 포스트잇 아이콘으로 사용
 
 export default function AdminMemberPage() {
-  // 인증 로직은 AdminSemesterPage에서 분리되었으므로, 여기서는 데이터 관리만 수행
   const [members, setMembers] = useState([]);
   const [editedMembers, setEditedMembers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -130,15 +128,7 @@ export default function AdminMemberPage() {
   return (
     <div className="min-h-screen p-4 bg-gray-100">
       <AdminHeader />
-      <div className="flex justify-center mb-6">
-        <button
-          onClick={handleAdd}
-          className="mt-6 px-6 py-3 bg-black text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition"
-        >
-          ➕ 새 멤버 추가
-        </button>
-      </div>
-
+    
       {loading ? (
         <p className="text-center text-xl text-indigo-600">데이터 로딩 중...</p>
       ) : members.length === 0 ? (
@@ -210,22 +200,31 @@ export default function AdminMemberPage() {
               <div className="mt-4 pt-3 border-t border-gray-100 space-y-2">
                 <button
                   onClick={() => handleSave(member.id)}
-                  className="w-full px-4 py-2 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600"
+                  className="w-full px-4 py-2 bg-black text-white font-semibold rounded-lg hover:bg-gray-800 transition"
                 >
-                  ✏️ 수정
+                  수정
                 </button>
 
                 <button
                   onClick={() => handleDelete(member.id)}
-                  className="w-full px-4 py-2 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600"
+                  className="w-full px-4 py-2 font-semibold border border-gray-100 rounded-lg hover:bg-gray-300 transition"
                 >
-                  🗑️ 삭제
+                  삭제
                 </button>
               </div>
             </div>
           ))}
         </div>
       )}
+      <button
+        onClick={handleAdd}
+        className="fixed bottom-10 right-10 bg-white p-4 rounded-full shadow-lg hover:bg-gray-200 transition z-40 flex items-center justify-center text-sm font-bold"
+        aria-label="글 작성하기"
+        title="새 글 작성하기"
+      >
+        <img src={ProfileIcon} alt="Write" className="w-6 h-6 mr-2" />
+        글 작성하기
+      </button>
     </div>
   );
 }

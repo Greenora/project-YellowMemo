@@ -3,6 +3,7 @@ import Sidebar from "../../components/SideBar";
 import SidebarToggleBtn from "../../components/SidebarToggleButton";
 import Copyright from '../../components/Copyright';
 import useCustomFetch from "../../hooks/useCustomFetch";
+import LogoutButton from '../../components/LogoutButtom';
 
 const TeamProfileDisplay = ({ member }) => {
   const { name, introduction, imageUrl } = member;
@@ -18,6 +19,7 @@ const TeamProfileDisplay = ({ member }) => {
 
   return (
     <div className="flex flex-col items-center p-4 w-74 mx-auto border rounded-lg shadow-sm min-h-[380px]">
+      <LogoutButton />
 
       <div
         className={`relative w-40 h-40 rounded-full overflow-hidden bg-gray-200 mb-4 flex items-center justify-center shadow-md`}

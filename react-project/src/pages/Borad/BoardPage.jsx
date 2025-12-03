@@ -5,6 +5,7 @@ import useCustomFetch from "../../hooks/useCustomFetch";
 import { Link, Navigate } from "react-router-dom";
 import ProfileIcon from "../../assets/sticky-note.png";
 import useAuthRedirect from "../../hooks/useAuthRedirect";
+import LogoutButton from "../../components/LogoutButtom";
 
 
 export default function BoardPage() {
@@ -40,10 +41,6 @@ export default function BoardPage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  function handleLogout() {
-    localStorage.removeItem("jwtToken");
-    Navigate('/');
-  }
 
   return (
     <div>
@@ -55,9 +52,7 @@ export default function BoardPage() {
       )}
 
       <div className="p-10 text-center items-center justify-center mt-10">
-        {/* 로그아웃 버튼 */}
-      <button onClick={handleLogout} className="fixed top-6 right-8 z-50 text-sm text-yellow-400">Logout</button>
-
+        <LogoutButton />
         <h1 className="text-2xl">
           👋 환영합니다! 사이드바에서 새 글을 만들어보세요. 👋
         </h1>

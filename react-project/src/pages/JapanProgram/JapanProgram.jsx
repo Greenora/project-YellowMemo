@@ -4,6 +4,7 @@ import Sidebar from "../../components/SideBar";
 import SidebarToggleBtn from "../../components/SidebarToggleButton";
 import Copyright from '../../components/Copyright';
 import useCustomFetch from '../../hooks/useCustomFetch';
+import LogoutButton from '../../components/LogoutButtom';
 
 function JapanProgram() {
   const [programs, setPrograms] = useState([]);
@@ -42,6 +43,7 @@ function JapanProgram() {
 
   return (
     <div className="relative min-h-screen bg-[#fcfcf8] p-4">
+      <LogoutButton />
       {!showSide && <SidebarToggleBtn onClick={() => setShowSide(true)} />}
       {showSide && <div ref={sidebarRef}><Sidebar onClose={() => setShowSide(false)} /></div>}
       
