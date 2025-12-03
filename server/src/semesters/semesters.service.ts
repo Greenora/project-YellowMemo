@@ -30,6 +30,13 @@ export class SemestersService {
     return semester;
   }
 
+  async findType(type: string) {
+    const semesters = await this.semestersRepository.find({
+      where: { type: type as 'osaka_review' | 'semester_info' }
+    });
+    return semesters;
+  }
+
   async update(id: number, updateSemesterDto: UpdateSemesterDto) {
     const semester = await this.findOne(id);
     Object.assign(semester, updateSemesterDto);
