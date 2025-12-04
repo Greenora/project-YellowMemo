@@ -36,10 +36,26 @@ export default function PostEdit() {
         const contents = postData.contents || [];
 
         // textbox
-        const loadedTextboxes = contents.filter(item => item.type === 'text').map(item => ({ ...item, content: item.value }));
+        const loadedTextboxes = contents
+          .filter(item => item.type === 'text')
+          .map(item => ({
+            ...item,
+            content: item.value,
+            x: Number(item.x),
+            y: Number(item.y),
+            id: Number(item.id)
+          }));
 
         // image
-        const loadedImages = contents.filter(item => item.type === 'image').map(item => ({ ...item, url: item.url }));
+        const loadedImages = contents
+          .filter(item => item.type === 'image')
+          .map(item => ({
+            ...item,
+            url: item.url,
+            x: Number(item.x),
+            y: Number(item.y),
+            id: Number(item.id)
+          }));
 
         setTextboxes(loadedTextboxes);
         setOriginalTextboxes(loadedTextboxes);
