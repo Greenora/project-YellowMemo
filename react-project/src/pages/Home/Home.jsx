@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import StickyNote from "../../assets/sticky-note.png";
 import FadeInOnScroll from "../../components/FadeInOnScroll"; // 앞서 안내한 스크롤 효과 컴포넌트
 import Copyright from "../../components/Copyright";
 
 function Home() {
   const [step, setStep] = useState("note");
+  const navigate = useNavigate();
   const [showCopyright, setShowCopyright] = useState(true);
   
   // 페이지가 로드될 때 스크롤 위치를 맨 위로 설정하고, 스크롤 복원 방지
@@ -39,6 +41,22 @@ function Home() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const handleNoteClick = async () => {
+    setStep("started");
+
+    const token = localStorage.getItem("jwtToken");
+
+    const nextPath = token ? "board" : "/login";
+
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    setStep("fade");
+
+    setTimeout(() => {
+      navigate(nextPath);
+    }, 1000);
+  };
 
   return (
     <div className="w-full min-h-screen bg-[#fcfcf8]">
@@ -78,6 +96,7 @@ function Home() {
               style={{
                 transformOrigin: "top center",
               }}
+              onClick={handleNoteClick}
             />
           )}
           {step !== "note" && (
