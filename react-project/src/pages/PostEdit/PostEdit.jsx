@@ -114,30 +114,52 @@ export default function PostEdit() {
     setImages((prev) => prev.filter((img) => img.id !== id)); // id 일치하지 않는 이미지만 화면에 표시
   };
 
-  // 이미지 추가
-  const handleAddImage = (e) => {
-    const file = e.target.files[0]; //파일 선택
-    if (!file) return; //파일 선택되지 않은 경우
+  // 이미지 추가 (파일 업로드 방식)
+  // 기존 Base64 방식 대신 서버에 파일을 업로드하고 URL을 받아서 사용
+  // 장점: DB 용량 절약, 이미지 크기 제한 문제 해결
+  const handleAddImage = async (e) => {
+    const file = e.target.files[0]; // 선택된 파일 가져오기
+    if (!file) return; // 파일 선택되지 않은 경우
 
-    const reader = new FileReader(); //FileReader로 파일 읽음
-    reader.onload = (ev) => {
-      const newId = Date.now(); // id 생성
+    try {
+      // 1. FormData 생성 - 파일 업로드용 데이터 형식
+      const formData = new FormData();
+      formData.append('file', file); // 'file' 필드에 파일 추가
+
+      // 2. 서버에 파일 업로드 요청 (POST /uploads)
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/uploads`, {
+        method: 'POST',
+        body: formData, // JSON이 아닌 FormData로 전송
+      });
+
+      if (!response.ok) {
+        throw new Error('파일 업로드 실패');
+      }
+
+      // 3. 서버 응답에서 URL 추출 (예: { url: "/uploads/1234-abcd.jpg" })
+      const data = await response.json();
+      const newId = Date.now(); // 이미지 고유 ID 생성
+
+      // 4. 이미지 상태에 추가 (URL로 저장)
       setImages((prev) => [
         ...prev,
         {
           id: newId,
-          url: ev.target.result, //base64 이미지 데이터
-          x: 200 + Math.random() * 50, //임의 위치 지정
-          y: 300 + prev.length * 120,
-          z: prev.length + 1,
-          postId: postId,
-          userId,
-          isNew: true, // 새 이미지 표시
+          url: `${process.env.REACT_APP_API_URL}${data.url}`, // 전체 URL (예: http://localhost:3000/uploads/1234-abcd.jpg)
+          x: 200 + Math.random() * 50, // x 좌표 (겹침 방지용 랜덤)
+          y: 300 + prev.length * 120, // y 좌표 (아래로 120px씩 배치)
+          z: prev.length + 1, // 쌓임 순서
+          postId: postId, // 현재 포스트 ID
+          userId, // 현재 사용자 ID
+          isNew: true, // 새로 추가된 이미지 표시 (수정 시 구분용)
         },
       ]);
-    };
-    reader.readAsDataURL(file);
-    e.target.value = ""; // input 초기화
+    } catch (error) {
+      console.error('이미지 업로드 에러:', error);
+      alert('이미지 업로드에 실패했습니다.');
+    }
+
+    e.target.value = ""; // input 초기화 (같은 파일 재선택 가능하게)
   };
 
   // 드래그 종료 후 위치 갱신
