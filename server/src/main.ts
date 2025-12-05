@@ -3,10 +3,17 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'; 
 import { ValidationPipe } from '@nestjs/common'; 
-import { HttpExceptionFilter } from './filters/http-exception.filter'; 
+import { HttpExceptionFilter } from './filters/http-exception.filter';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // 정적 파일 서빙 (uploads 폴더)
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+    prefix: '/uploads/',
+  });
 
   //CORS 설정 (프론트 3001번 포트 허용)
   app.enableCors({

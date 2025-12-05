@@ -7,6 +7,7 @@ import { PostsModule } from './posts/posts.module';
 import { CommentsModule } from './comments/comments.module';
 import { MembersModule } from './members/members.module';
 import { SemestersModule } from './semesters/semesters.module';
+import { UploadsModule } from './uploads/uploads.module';
 
 
 @Module({
@@ -26,8 +27,8 @@ import { SemestersModule } from './semesters/semesters.module';
       password: process.env.DB_PASSWORD,
       database: process.env.DB_DATABASE,
       entities: [__dirname + '/**/*.entity{.ts,.js}'], // 엔티티 파일 자동 로드
-      synchronize: false, // true면 엔티티 기준으로 DB 테이블 자동 생성 (개발용)
-      migrationsRun: true, //앱 시작 시 마이그레이션 자동 실행
+      synchronize: true, // 개발용: 엔티티 변경 시 DB 자동 동기화 (프로덕션에서는 false)
+      migrationsRun: false, // synchronize: true 사용 시 마이그레이션 비활성화
     }),
 
     //만든 모듈들
@@ -37,6 +38,7 @@ import { SemestersModule } from './semesters/semesters.module';
     CommentsModule,
     MembersModule,
     SemestersModule,
+    UploadsModule,
   ],
   controllers: [], //기본 컨트롤러/서비스는 안 씀
   providers: [],
