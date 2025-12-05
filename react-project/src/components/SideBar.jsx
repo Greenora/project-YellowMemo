@@ -10,44 +10,43 @@ function Sidebar() {
   const [myPosts, setMyPosts] = useState([]);
   const [filter, setFilter] = useState("all");
   const [userId, setUserId] = useState("");
-  const fileInputRef = useRef();
+  const [editingName, setEditingName] = useState(false);
+  const [newNickname, setNewNickname] = useState("");
 
+  const fileInputRef = useRef();
   const apiFetch = useCustomFetch();
 
-  // 로그인된 유저 정보
+  const refreshUserData = async () => {
+    try {
+      const res = await apiFetch("/users/me", { method: "GET" });
+      setUser(res.data);
+      return res.data;
+    } catch (error) {
+      console.log("유저 정보 불러오기 오류:", error);
+      return null;
+    }
+  };
+
   useEffect(() => {
     const loadUserData = async () => {
-      try {
-        const res = await apiFetch("/users/me", { method: "GET" });
-        setUser(res.data);
-        setUserId(res.data.id)
-      } catch (error) {
-        console.log("유저 정보 불러오기 오류:", error);
-      }
+      const userData = await refreshUserData();
+      if (userData) setUserId(userData.id);
     };
-
     loadUserData();
-  }, [userId]);
+  }, []);
 
   useEffect(() => {
     if (!userId) return;
 
     const fetchData = async () => {
       try {
-        // 1) 내 정보 가져오기
-        const me = await apiFetch("/users/me", { method: "GET" });
-        setUser(me.data);
-
-        // 2) 모든 포스트 가져오기
         const postsRes = await apiFetch("/posts", { method: "GET" });
-        console.log(postsRes)
+        const postArray = Array.isArray(postsRes.data)
+          ? postsRes.data
+          : [];
 
-        const postArray = Array.isArray(postsRes.data) ? postsRes.data : [];
         setPosts(postArray);
-
-        // 3) 내 포스트 필터링
-        setMyPosts(postArray.filter(p => p.user?.id == userId));
-
+        setMyPosts(postArray.filter((p) => p.user?.id == userId));
       } catch (error) {
         console.error(error);
       }
@@ -56,54 +55,57 @@ function Sidebar() {
     fetchData();
   }, [userId]);
 
-  const handleImgError = (e) => {
-    if (e.target.src !== ProfileIcon) {
-      e.target.src = ProfileIcon;      
+  const handleProfileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const patchRes = await apiFetch("/users/me", {
+        method: "PATCH",
+        body: formData,
+        isFormData: true,
+      });
+
+      if (patchRes.ok) {
+        await new Promise((r) => setTimeout(r, 500));
+        await refreshUserData();
+      } else {
+        console.error("업로드 실패:", patchRes);
+      }
+    } catch (error) {
+      console.log("프로필 업데이트 오류:", error);
     }
   };
 
-  // // 로그인 안 된 경우 UI 차단
-  // if (!userId) {
-  //   return (
-  //     <aside className="fixed top-0 left-0 h-full w-[260px] bg-white/95 border-r border-gray-100 flex flex-col items-center justify-center z-50 shadow">
-  //       <div className="text-center">
-  //         <div className="text-lg text-gray-700 mb-4">Log in to unlock the magic!</div>
-  //         <CustomButton
-  //           onClick={() => window.location.assign("/login")}
-  //           className="px-6 py-2 bg-black text-white rounded-lg hover:bg-gray-900 transition"
-  //         >
-  //           Continue to Login
-  //         </CustomButton>
-  //       </div>
-  //     </aside>
-  //   );
-  // }
+  const handleNicknameSave = async () => {
+    if (!newNickname.trim()) return;
 
-  // 프로필 사진 업데이트
-  // const handleProfileChange = async (e) => {
-  //   const file = e.target.files[0];
-  //   if (!file) return;
+    try {
+      const res = await apiFetch("/users/me", {
+        method: "PATCH",
+        body: JSON.stringify({ nickname: newNickname }),
+        headers: { "Content-Type": "application/json" },
+      });
 
-  //   const reader = new FileReader();
-  //   reader.onloadend = async () => {
-  //     try {
-  //       const base64 = reader.result;
+      if (res.ok) {
+        await refreshUserData();
+        setEditingName(false);
+      } else {
+        console.error("닉네임 변경 실패:", res);
+      }
+    } catch (err) {
+      console.log("닉네임 변경 오류:", err);
+    }
+  };
 
-  //       const res = await apiFetch(`/user/${userId}`, {
-  //         method: "PATCH",
-  //         body: JSON.stringify({ profile: base64 }),
-  //       });
-
-  //       setUser(res.data);
-  //     } catch (error) {
-  //       console.log("프로필 업데이트 오류:", error);
-  //     }
-  //   };
-
-  //   reader.readAsDataURL(file);
-  // };
-
-  // 게시글 제목 가져오기
+  const handleImgError = (e) => {
+    if (e.target.src !== ProfileIcon) {
+      e.target.src = ProfileIcon;
+    }
+  };
 
   const goTo = (url) => window.location.assign(url);
 
@@ -111,14 +113,17 @@ function Sidebar() {
 
   const postList = filter === "all" ? posts : myPosts;
 
+  const displayImageUrl =
+    user?.image_url && user.image_url.trim() !== ""
+      ? user.image_url
+      : ProfileIcon;
+
   return (
     <aside className="fixed top-0 left-0 h-full w-[260px] bg-white/95 border-r border-gray-100 flex flex-col items-center z-50 shadow">
-      
-      {/* ---------- 프로필 영역 ---------- */}
       <div className="mt-10 mb-4 flex flex-col items-center">
         <div className="relative">
           <img
-            src={user?.image_url && user.image_url.trim() !== "" ? user.image_url : ProfileIcon}
+            src={displayImageUrl}
             alt="profile"
             className="w-24 h-24 rounded-full object-cover border-2 border-gray-200 bg-gray-100"
             onError={handleImgError}
@@ -129,56 +134,97 @@ function Sidebar() {
           >
             <img src={PencilIcon} alt="edit" className="w-5 h-5" />
           </button>
+
           <input
             type="file"
             accept="image/*"
             ref={fileInputRef}
             style={{ display: "none" }}
-            // onChange={handleProfileChange}
+            onChange={handleProfileChange}
           />
         </div>
-        <div className="mt-5 mb-1 text-2xl">{user.nickname}'s space</div>
+
+        {editingName ? (
+          <div className="flex flex-col items-center mt-4">
+            <input
+              value={newNickname}
+              onChange={(e) => setNewNickname(e.target.value)}
+              className="border px-2 py-1 rounded text-center"
+            />
+            <button
+              onClick={handleNicknameSave}
+              className="mt-2 px-3 py-1 bg-black text-white rounded text-sm"
+            >
+              저장
+            </button>
+          </div>
+        ) : (
+          <div
+            className="mt-5 mb-1 text-2xl cursor-pointer"
+            onClick={() => {
+              setEditingName(true);
+              setNewNickname(user.nickname);
+            }}
+          >
+            {user.nickname}'s space
+          </div>
+        )}
       </div>
 
-      {/* ---------- Navigation Buttons ---------- */}
-      <CustomButton onClick={() => goTo("/post/create")} className="w-[90%] bg-black text-white rounded-xl py-3 mt-2 mb-1">
+      <CustomButton
+        onClick={() => goTo("/post/create")}
+        className="w-[90%] bg-black text-white rounded-xl py-3 mt-2 mb-1"
+      >
         New Post
       </CustomButton>
 
-      <CustomButton onClick={() => goTo("/our-team")} className="w-[90%] bg-white rounded-xl py-3 mb-1 hover:bg-slate-100">
+      <CustomButton
+        onClick={() => goTo("/our-team")}
+        className="w-[90%] bg-white rounded-xl py-3 mb-1 hover:bg-slate-100"
+      >
         Our Team
       </CustomButton>
 
-      <CustomButton onClick={() => goTo("/osaka-introduce")} className="w-[90%] bg-white rounded-xl py-3 mb-1 hover:bg-slate-100">
+      <CustomButton
+        onClick={() => goTo("/osaka-introduce")}
+        className="w-[90%] bg-white rounded-xl py-3 mb-1 hover:bg-slate-100"
+      >
         Our experience Osaka
       </CustomButton>
 
-      <CustomButton onClick={() => goTo("/program-introduce")} className="w-[90%] bg-white rounded-xl py-3 mb-8 hover:bg-slate-100">
+      <CustomButton
+        onClick={() => goTo("/program-introduce")}
+        className="w-[90%] bg-white rounded-xl py-3 mb-8 hover:bg-slate-100"
+      >
         About Study Abroad Program
       </CustomButton>
 
-      {/* ---------- Filter 버튼 ---------- */}
       <div className="w-[90%] flex items-center gap-2 mb-7">
         <span className="text-gray-500 text-sm ml-1 mr-2">Filter</span>
 
         <CustomButton
           onClick={() => setFilter("all")}
-          className={`px-4 rounded-lg border ${filter === "all" ? "bg-gray-200 text-black" : "bg-white text-gray-600"}`}
+          className={`px-4 rounded-lg border ${
+            filter === "all" ? "bg-gray-200 text-black" : "bg-white text-gray-600"
+          }`}
         >
           All
         </CustomButton>
 
         <CustomButton
           onClick={() => setFilter("mine")}
-          className={`px-4 rounded-lg border ${filter === "mine" ? "bg-gray-200 text-black" : "bg-white text-gray-600"}`}
+          className={`px-4 rounded-lg border ${
+            filter === "mine"
+              ? "bg-gray-200 text-black"
+              : "bg-white text-gray-600"
+          }`}
         >
           Mine
         </CustomButton>
       </div>
 
-      {/* ---------- Post 목록 ---------- */}
       <div className="w-[90%] flex-1 overflow-y-auto pb-6">
-        {postList.map(post => (
+        {postList.map((post) => (
           <div key={post.id} className="overflow-hidden rounded-xl mb-2">
             <CustomButton
               onClick={() => goTo(`/post/${post.id}`)}

@@ -129,7 +129,7 @@ export default function OsakaPage() {
   // 1. READ: 데이터 로딩
   const fetchData = async () => {
     try {
-      const res = await apiFetch("/semesters/osaka_review", { method: "GET" });
+      const res = await apiFetch("/semesters/type/osaka_review", { method: "GET" });
       if (!res.ok) throw new Error(res.message || "데이터 로딩 실패");
       setPosts(res.data);
     } catch (error) {
