@@ -16,7 +16,7 @@ function JapanProgram() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await apiFetch("/semesters/semester_info", { method: "GET" });
+        const res = await apiFetch("/semesters/type/semester_info", { method: "GET" });
         if (!res.ok) throw new Error(res.message || "데이터 로딩 실패");
 
         // // 제목에 "오사카" 미포함 글 필터링

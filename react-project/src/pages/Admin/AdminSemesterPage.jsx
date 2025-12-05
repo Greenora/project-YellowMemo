@@ -21,7 +21,7 @@ export default function AdminSemesterPage() {
   const fetchSemesters = async () => {
     setLoading(true);
     try {
-      const res = await apiFetch("/semesters/semester_info", { method: "GET" });
+      const res = await apiFetch("/semesters/type/semester_info", { method: "GET" });
       if (!res.ok || !res.data) throw new Error("데이터 로딩 실패");
 
       const data = Array.isArray(res.data) ? res.data : [];
