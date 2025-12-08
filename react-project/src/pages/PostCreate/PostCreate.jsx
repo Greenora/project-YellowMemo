@@ -55,7 +55,6 @@ export default function PostCreate() {
 
   // 이미지 추가 (파일 업로드 방식)
   // 기존 Base64 방식 대신 서버에 파일을 업로드하고 URL을 받아서 사용
-  // 장점: DB 용량 절약, 이미지 크기 제한 문제 해결
   const handleAddImage = async (e) => {
     const file = e.target.files[0]; // 선택된 파일 가져오기
     if (!file) return; // 파일이 선택되지 않은 경우 처리
@@ -65,42 +64,42 @@ export default function PostCreate() {
     }
 
     try {
-      // 1. FormData 생성 - 파일 업로드용 데이터 형식
+      // FormData 생성 - 파일 업로드용 데이터 형식
       const formData = new FormData();
       formData.append('file', file); // 'file' 필드에 파일 추가
 
-      // 2. 서버에 파일 업로드 요청 (POST /uploads)
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/uploads`, {
+      // 서버에 파일 업로드 요청 (POST /uploads)
+      const response = await customFetch("/uploads", {
         method: 'POST',
         body: formData, // JSON이 아닌 FormData로 전송
       });
 
       if (!response.ok) {
-        throw new Error('파일 업로드 실패');
+        throw new Error(response.message || '파일 업로드 실패');
       }
 
-      // 3. 서버 응답에서 URL 추출 (예: { url: "/uploads/1234-abcd.jpg" })
-      const data = await response.json();
+      // 서버 응답에서 URL 추출
+      const data = response.data;
       const newId = Date.now(); // 이미지 고유 ID 생성
 
-      // 4. 이미지 상태에 추가 (URL로 저장)
+      // 이미지 상태에 추가 (URL로 저장)
       setImages(prev => [
         ...prev,
         {
           id: newId,
-          x: 200 + Math.random() * 50, // x 좌표 (겹침 방지용 랜덤)
-          y: 300 + prev.length * 120, // y 좌표 (아래로 120px씩 배치)
-          z: prev.length + 1, // 쌓임 순서
-          src: `${process.env.REACT_APP_API_URL}${data.url}`, // 전체 URL (예: http://localhost:3000/uploads/1234-abcd.jpg)
+          x: Math.round(400 + Math.random() * 50),
+          y: Math.round(100 + Math.random() * 50),
+          z: prev.length + 1,
+          src: `${process.env.REACT_APP_API_URL}${data.url}`,
           userId: userId,
         },
       ]);
     } catch (error) {
       console.error('이미지 업로드 에러:', error);
-      alert('이미지 업로드에 실패했습니다.');
+      alert('이미지 업로드에 실패했습니다.🥲');
     }
 
-    e.target.value = ""; // 파일 input 초기화 (같은 파일 재선택 가능하게)
+    e.target.value = ""; // 파일 input 초기화
   };
 
   // 이미지 삭제
