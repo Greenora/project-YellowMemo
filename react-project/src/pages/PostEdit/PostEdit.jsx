@@ -148,8 +148,8 @@ export default function PostEdit() {
         ...prev,
         {
           id: newId,
-          x: 200 + Math.random() * 50,
-          y: 300 + prev.length * 120,
+          x: Math.round(400 + Math.random() * 50),
+          y: Math.round(100 + Math.random() * 50),
           z: prev.length + 1,
           src: `${process.env.REACT_APP_API_URL}${data.url}`,
           userId: userId,
