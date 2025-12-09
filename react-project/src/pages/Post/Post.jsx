@@ -10,6 +10,7 @@ import { DndContext } from "@dnd-kit/core";  // DndContext -> drag and drop 기�
 import Drag from "../../components/Drag";
 import { getMaxLineLength } from "../../components/textboxUtils";
 import Copyright from "../../components/Copyright";
+import LogoutButton from "../../components/LogoutButtom";
 
 import CommentIcon from "../../assets/post_comment.svg";
 import ShareIcon from "../../assets/post_share.svg";
@@ -245,7 +246,7 @@ export default function Post() {
   return (
     <div className="relative min-h-screen bg-[#fcfcf8] p-4 overflow-hidden select-none">
       {/* 로그아웃 버튼 */}
-      <button onClick={handleLogout} className="fixed top-6 right-8 z-50 text-sm text-yellow-400">Logout</button>
+      <LogoutButton />
 
       {/* showSide가 false이면 sidebar toggle button이 보이기, 클릭 시 사이드바 열기 */}
       {!showSide && <SidebarToggleBtn onClick={() => setShowSide(true)} />}

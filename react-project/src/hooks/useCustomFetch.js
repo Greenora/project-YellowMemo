@@ -17,7 +17,7 @@ const useCustomFetch = () => {
       endpoint.startsWith(p)
     );
 
-    // 토큰 만료 체크 (기존 로직 유지)
+    // 토큰 만료 체크
     const isTokenExpired = (t) => {
       if (!t) return true;
       try {
@@ -28,7 +28,7 @@ const useCustomFetch = () => {
       }
     };
 
-    // 비공개 API인데 토큰없거나 만료 → 즉시 로그아웃 처리 (기존 로직 유지)
+    // 비공개 API인데 토큰없거나 만료 → 즉시 로그아웃 처리
     if (!isPublicEndpoint && isTokenExpired(token)) {
       logout();
       alert("세션이 만료되었습니다. 다시 로그인해주세요.");
@@ -36,9 +36,11 @@ const useCustomFetch = () => {
       return { ok: false, status: 401, message: "세션 만료", data: null };
     }
 
-    // 헤더 구성 (기존 로직 유지)
+    const isFormData = options.body instanceof FormData;
+
+    // 헤더 구성
     const mergedHeaders = {
-      "Content-Type": "application/json",
+      ...(isFormData ? {} : { "Content-Type": "application/json" }),
       ...(options.headers || {}),
       ...(!isPublicEndpoint && token ? { Authorization: `Bearer ${token}` } : {}),
     };
