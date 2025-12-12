@@ -1,87 +1,92 @@
+// src/pages/admin/AdminMembersPage.jsx
+
 import React, { useState, useEffect } from "react";
 import useCustomFetch from "../../hooks/useCustomFetch";
 import AdminHeader from "../../components/AdminHeader";
 import ProfileIcon from "../../assets/sticky-note.png";
 
-export default function AdminSemesterPage() {
-  const [semesters, setSemesters] = useState([]);
-  const [editedSemesters, setEditedSemesters] = useState([]);
+export default function AdminMembersPage() {
+  const apiFetch = useCustomFetch();
+  const [members, setMembers] = useState([]);
+  const [editedMembers, setEditedMembers] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const apiFetch = useCustomFetch();
-
+  /** 절대 URL 변환 */
   const getAbsoluteUrl = (path) => {
     if (!path) return "";
     if (path.startsWith("http://") || path.startsWith("https://")) return path;
     return `${process.env.REACT_APP_API_URL}${path}`;
   };
 
-  useEffect(() => {
-    fetchSemesters();
-  }, []);
-
-  const fetchSemesters = async () => {
+  /** 멤버 불러오기 */
+  const fetchMembers = async () => {
     setLoading(true);
     try {
-      const res = await apiFetch("/semesters/type/semester_info", { method: "GET" });
-      if (!res.ok || !res.data) throw new Error("데이터 로딩 실패");
+      const res = await apiFetch("/members", { method: "GET" });
 
-      const data = Array.isArray(res.data)
-        ? res.data.map((s) => ({
-            ...s,
-            imageUrl: getAbsoluteUrl(s.imageUrl),
-          }))
-        : [];
+      if (!res.ok || !res.data) throw new Error("멤버 불러오기 실패");
 
-      setSemesters(data);
-      setEditedSemesters(data);
+      const normalized = res.data.map((m) => ({
+        ...m,
+        imageUrl: getAbsoluteUrl(m.imageUrl),
+      }));
+
+      setMembers(normalized);
+      setEditedMembers(normalized);
     } catch (err) {
-      console.error("데이터 로딩 중 에러:", err);
-      setSemesters([]);
-      setEditedSemesters([]);
+      console.error(err);
+      alert("멤버 불러오기 오류");
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    fetchMembers();
+  }, []);
+
+  /** 멤버 추가 */
   const handleAdd = async () => {
-    const newItem = {
-      title: "새 프로그램",
-      content: "내용을 입력하세요.",
-      imageUrl: "",
-      type: "semester_info",
+    const newMember = {
+      name: "새 멤버",
+      introduction: "소개를 입력하세요.",
+      imageUrl: null,
     };
 
     try {
-      const res = await apiFetch("/semesters", {
+      const res = await apiFetch("/members", {
         method: "POST",
-        body: JSON.stringify(newItem),
+        body: JSON.stringify(newMember),
+        headers: { "Content-Type": "application/json" },
       });
 
-      if (!res.ok || !res.data) throw new Error("생성 실패");
+      if (!res.ok || !res.data) throw new Error("멤버 생성 실패");
 
-      const saved = {
+      const created = {
         ...res.data,
         imageUrl: getAbsoluteUrl(res.data.imageUrl),
       };
 
-      setSemesters((prev) => [...prev, saved]);
-      setEditedSemesters((prev) => [...prev, saved]);
+      setMembers((prev) => [...prev, created]);
+      setEditedMembers((prev) => [...prev, created]);
     } catch (err) {
-      console.error("생성 실패:", err);
-      alert("생성 실패");
+      console.error(err);
+      alert("멤버 생성 실패");
     }
   };
 
+  /** 이미지 업로드 + 멤버에 PATCH */
   const handleImageUpload = async (e, id) => {
     const file = e.target.files[0];
     if (!file) return;
+
     if (!file.type.startsWith("image/")) {
-      alert("이미지 파일만 업로드할 수 있습니다.");
+      alert("이미지 파일만 업로드 가능합니다.");
       return;
     }
 
     try {
+      // 1) 이미지 업로드
       const formData = new FormData();
       formData.append("file", file);
 
@@ -90,40 +95,42 @@ export default function AdminSemesterPage() {
         body: formData,
       });
 
-      if (!uploadRes.ok) {
-        alert("이미지 업로드 실패");
-        return;
+      if (!uploadRes.ok || !uploadRes.data?.url) {
+        throw new Error("이미지 업로드 실패");
       }
 
       const imageUrl = getAbsoluteUrl(uploadRes.data.url);
-      const patchRes = await apiFetch(`/semesters/${id}`, {
+
+      // 2) 멤버 데이터 PATCH
+      const patchRes = await apiFetch(`/members/${id}`, {
         method: "PATCH",
         body: JSON.stringify({ imageUrl }),
         headers: { "Content-Type": "application/json" },
       });
 
-      if (!patchRes.ok) throw new Error("이미지 갱신 실패");
+      if (!patchRes.ok) throw new Error("이미지 수정 실패");
 
-      setEditedSemesters((prev) =>
-        prev.map((s) => (s.id === id ? { ...s, imageUrl } : s))
+      // 3) UI 반영
+      setMembers((prev) =>
+        prev.map((m) => (m.id === id ? { ...m, imageUrl } : m))
       );
-
-      setSemesters((prev) =>
-        prev.map((s) => (s.id === id ? { ...s, imageUrl } : s))
+      setEditedMembers((prev) =>
+        prev.map((m) => (m.id === id ? { ...m, imageUrl } : m))
       );
 
       alert("이미지가 업데이트되었습니다.");
     } catch (err) {
-      console.error("이미지 업로드 오류:", err);
+      console.error("이미지 오류:", err);
       alert("이미지 업로드 실패");
     }
 
     e.target.value = "";
   };
 
+  /** 수정(PATCH) */
   const handleSave = async (id) => {
-    const original = semesters.find((s) => s.id === id);
-    const edited = editedSemesters.find((s) => s.id === id);
+    const original = members.find((m) => m.id === id);
+    const edited = editedMembers.find((m) => m.id === id);
 
     const patchData = {};
     for (let key in edited) {
@@ -138,38 +145,42 @@ export default function AdminSemesterPage() {
     }
 
     try {
-      const res = await apiFetch(`/semesters/${id}`, {
+      const res = await apiFetch(`/members/${id}`, {
         method: "PATCH",
         body: JSON.stringify(patchData),
+        headers: { "Content-Type": "application/json" },
       });
 
-      if (!res.ok) throw new Error("서버 수정 실패");
+      if (!res.ok) throw new Error("멤버 수정 실패");
 
-      setSemesters((prev) =>
-        prev.map((s) => (s.id === id ? { ...s, ...patchData } : s))
+      setMembers((prev) =>
+        prev.map((m) => (m.id === id ? { ...m, ...patchData } : m))
       );
 
-      alert("수정되었습니다.");
+      alert("수정 완료!");
     } catch (err) {
-      console.error("수정 실패:", err);
-      alert("수정 실패. 서버 데이터로 다시 불러옵니다.");
-      fetchSemesters();
+      console.error(err);
+      alert("수정 실패 — 새로고침합니다.");
+      fetchMembers();
     }
   };
 
+  /** 삭제 */
   const handleDelete = async (id) => {
-    if (!window.confirm("정말 삭제할까요?")) return;
+    if (!window.confirm("정말 삭제하시겠습니까?")) return;
 
     try {
-      const res = await apiFetch(`/semesters/${id}`, { method: "DELETE" });
-      if (res.status !== 200 && res.status !== 204) {
-        throw new Error("삭제 실패");
-      }
+      const res = await apiFetch(`/members/${id}`, {
+        method: "DELETE",
+      });
 
-      setSemesters((prev) => prev.filter((s) => s.id !== id));
-      setEditedSemesters((prev) => prev.filter((s) => s.id !== id));
+      if (res.status !== 200 && res.status !== 204)
+        throw new Error("삭제 실패");
+
+      setMembers((prev) => prev.filter((m) => m.id !== id));
+      setEditedMembers((prev) => prev.filter((m) => m.id !== id));
     } catch (err) {
-      console.error("삭제 실패:", err);
+      console.error(err);
       alert("삭제 실패");
     }
   };
@@ -179,74 +190,71 @@ export default function AdminSemesterPage() {
       <AdminHeader />
 
       {loading ? (
-        <p className="text-center text-xl text-gray-600">데이터 로딩 중...</p>
-      ) : semesters.length === 0 ? (
-        <p className="text-center text-lg text-gray-500 border-2 border-dashed p-10 rounded-lg bg-white">
-          아직 프로그램이 없습니다.
-        </p>
+        <p className="text-center">멤버 로딩 중...</p>
+      ) : members.length === 0 ? (
+        <p className="text-center">아직 멤버가 없습니다.</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {editedSemesters.map((s) => (
+          {editedMembers.map((m) => (
             <div
-              key={s.id}
-              className="border p-5 rounded-xl bg-white shadow-lg space-y-3 flex flex-col"
+              key={m.id}
+              className="border p-5 rounded-xl bg-white shadow-lg"
             >
-              <h3 className="text-lg font-bold text-gray-700">ID: {s.id}</h3>
+              <h3 className="text-lg font-bold">ID: {m.id}</h3>
 
-              <label className="text-sm font-medium text-gray-600">제목:</label>
+              <label>이름</label>
               <input
                 className="w-full border p-2 rounded"
-                value={s.title}
+                value={m.name}
                 onChange={(e) =>
-                  setEditedSemesters((prev) =>
+                  setEditedMembers((prev) =>
                     prev.map((x) =>
-                      x.id === s.id ? { ...x, title: e.target.value } : x
+                      x.id === m.id ? { ...x, name: e.target.value } : x
                     )
                   )
                 }
               />
 
-              <label className="text-sm font-medium text-gray-600">내용:</label>
+              <label>소개</label>
               <textarea
                 className="w-full border p-2 rounded h-24 resize-none"
-                value={s.content}
+                value={m.introduction}
                 onChange={(e) =>
-                  setEditedSemesters((prev) =>
+                  setEditedMembers((prev) =>
                     prev.map((x) =>
-                      x.id === s.id ? { ...x, content: e.target.value } : x
+                      x.id === m.id
+                        ? { ...x, introduction: e.target.value }
+                        : x
                     )
                   )
                 }
               />
 
-              <label className="text-sm font-medium text-gray-600">이미지:</label>
-
+              <label>이미지</label>
               <div className="flex flex-col space-y-2">
                 <img
-                  src={s.imageUrl || ProfileIcon}
+                  src={m.imageUrl || ProfileIcon}
                   alt="preview"
                   className="w-24 h-24 object-cover rounded-lg border bg-gray-50"
-                  onError={(e) => (e.target.src = ProfileIcon)}
                 />
-
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) => handleImageUpload(e, s.id)}
+                  onChange={(e) => handleImageUpload(e, m.id)}
                 />
               </div>
 
-              <div className="mt-4 pt-3 border-t border-gray-100 space-y-2">
+              <div className="mt-4 space-y-2">
                 <button
-                  onClick={() => handleSave(s.id)}
-                  className="w-full px-4 py-2 bg-black text-white font-semibold rounded-lg hover:bg-gray-800 transition"
+                  onClick={() => handleSave(m.id)}
+                  className="w-full px-4 py-2 bg-black text-white rounded"
                 >
                   수정
                 </button>
 
                 <button
-                  onClick={() => handleDelete(s.id)}
-                  className="w-full px-4 py-2 font-semibold border border-gray-100 rounded-lg hover:bg-gray-300 transition"
+                  onClick={() => handleDelete(m.id)}
+                  className="w-full px-4 py-2 border rounded"
                 >
                   삭제
                 </button>
@@ -258,9 +266,8 @@ export default function AdminSemesterPage() {
 
       <button
         onClick={handleAdd}
-        className="fixed bottom-10 right-10 bg-white p-4 rounded-full shadow-lg hover:bg-gray-200 transition z-40 flex items-center justify-center text-sm"
+        className="fixed bottom-10 right-10 bg-white p-4 rounded-full shadow-lg"
       >
-        <img src={ProfileIcon} alt="add" className="w-6 h-6 mr-2" />
         새 멤버 추가
       </button>
     </div>
