@@ -1,80 +1,131 @@
 import React, { useState, useEffect } from "react";
 import useCustomFetch from "../../hooks/useCustomFetch";
-import AdminHeader from "../../components/AdminHeader"; 
-import ProfileIcon from "../../assets/sticky-note.png"; // 포스트잇 아이콘으로 사용
+import AdminHeader from "../../components/AdminHeader";
+import ProfileIcon from "../../assets/sticky-note.png";
 
-export default function AdminMemberPage() {
+export default function AdminMembersPage() {
+  const apiFetch = useCustomFetch();
   const [members, setMembers] = useState([]);
   const [editedMembers, setEditedMembers] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const apiFetch = useCustomFetch();
-  
-  // Member DTO 필드 정의
-  const MEMBER_FIELDS = {
-    name: "이름",
-    introduction: "소개",
-    imageUrl: "이미지 URL",
+  const getAbsoluteUrl = (path) => {
+    if (!path) return "";
+    if (path.startsWith("http://") || path.startsWith("https://")) return path;
+    return `${process.env.REACT_APP_API_URL}${path}`;
   };
 
-  // --- 1. 데이터 로드 ---
-  useEffect(() => {
-    fetchMembers();
-  }, []);
-
-  // --- 2. READ: 데이터 가져오기 (GET /members) ---
   const fetchMembers = async () => {
     setLoading(true);
     try {
       const res = await apiFetch("/members", { method: "GET" });
-      if (!res.ok || !res.data) throw new Error("데이터 로딩 실패");
 
-      const data = Array.isArray(res.data) ? res.data : [];
-      setMembers(data);
-      setEditedMembers(data);
+      if (!res.ok || !res.data) throw new Error("멤버 불러오기 실패");
+
+      const normalized = res.data.map((m) => ({
+        ...m,
+        imageUrl: getAbsoluteUrl(m.imageUrl),
+      }));
+
+      setMembers(normalized);
+      setEditedMembers(normalized);
     } catch (err) {
-      console.error("데이터 로딩 중 에러:", err);
-      setMembers([]);
-      setEditedMembers([]);
+      console.error(err);
+      alert("멤버 불러오기 오류");
     } finally {
       setLoading(false);
     }
   };
 
-  // --- 3. CREATE: 새 멤버 추가 (POST /members) ---
+  useEffect(() => {
+    fetchMembers();
+  }, []);
+
   const handleAdd = async () => {
     const newMember = {
       name: "새 멤버",
-      introduction: "소개 내용을 입력하세요.",
-      imageUrl: "",
+      introduction: "소개를 입력하세요.",
+      imageUrl: null,
     };
 
     try {
       const res = await apiFetch("/members", {
         method: "POST",
         body: JSON.stringify(newMember),
+        headers: { "Content-Type": "application/json" },
       });
 
-      if (!res.ok || !res.data) throw new Error("생성 실패");
+      if (!res.ok || !res.data) throw new Error("멤버 생성 실패");
 
-      setMembers((prev) => [...prev, res.data]);
-      setEditedMembers((prev) => [...prev, res.data]);
+      const created = {
+        ...res.data,
+        imageUrl: getAbsoluteUrl(res.data.imageUrl),
+      };
+
+      setMembers((prev) => [...prev, created]);
+      setEditedMembers((prev) => [...prev, created]);
     } catch (err) {
-      console.error("멤버 생성 실패:", err);
+      console.error(err);
       alert("멤버 생성 실패");
     }
   };
 
-  // --- 4. UPDATE: 수정 버튼 클릭 시 PATCH 요청 (PATCH /members/{id}) ---
+  /** 이미지 업로드 + 멤버에 PATCH */
+  const handleImageUpload = async (e, id) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("이미지 파일만 업로드 가능합니다.");
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const uploadRes = await apiFetch("/uploads", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!uploadRes.ok || !uploadRes.data?.url) {
+        throw new Error("이미지 업로드 실패");
+      }
+
+      const imageUrl = getAbsoluteUrl(uploadRes.data.url);
+
+      const patchRes = await apiFetch(`/members/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ imageUrl }),
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!patchRes.ok) throw new Error("이미지 수정 실패");
+
+      setMembers((prev) =>
+        prev.map((m) => (m.id === id ? { ...m, imageUrl } : m))
+      );
+      setEditedMembers((prev) =>
+        prev.map((m) => (m.id === id ? { ...m, imageUrl } : m))
+      );
+
+      alert("이미지가 업데이트되었습니다.");
+    } catch (err) {
+      console.error("이미지 오류:", err);
+      alert("이미지 업로드 실패");
+    }
+
+    e.target.value = "";
+  };
+
   const handleSave = async (id) => {
     const original = members.find((m) => m.id === id);
     const edited = editedMembers.find((m) => m.id === id);
 
-    // 변경된 필드만 PATCH
     const patchData = {};
     for (let key in edited) {
-      // id, createdAt 등 변경 불가 필드 제외 후 비교
-      if (key !== 'id' && edited[key] !== original[key]) {
+      if (key !== "id" && edited[key] !== original[key]) {
         patchData[key] = edited[key];
       }
     }
@@ -88,126 +139,112 @@ export default function AdminMemberPage() {
       const res = await apiFetch(`/members/${id}`, {
         method: "PATCH",
         body: JSON.stringify(patchData),
+        headers: { "Content-Type": "application/json" },
       });
 
-      if (!res.ok) throw new Error("서버 수정 실패");
+      if (!res.ok) throw new Error("멤버 수정 실패");
 
-      // 성공 → 메인 상태 업데이트
       setMembers((prev) =>
         prev.map((m) => (m.id === id ? { ...m, ...patchData } : m))
       );
 
-      alert("수정되었습니다.");
+      alert("수정 완료!");
     } catch (err) {
-      console.error("수정 실패:", err);
-      alert("수정 실패. 서버 데이터로 롤백합니다.");
+      console.error(err);
+      alert("수정 실패 — 새로고침합니다.");
       fetchMembers();
     }
   };
 
-  // --- 5. DELETE (DELETE /members/{id}) ---
   const handleDelete = async (id) => {
-    if (!window.confirm("정말 삭제할까요?")) return;
+    if (!window.confirm("정말 삭제하시겠습니까?")) return;
 
     try {
-      const res = await apiFetch(`/members/${id}`, { method: "DELETE" });
-      // 204 No Content도 성공으로 처리
-      if (res.status !== 200 && res.status !== 204) {
+      const res = await apiFetch(`/members/${id}`, {
+        method: "DELETE",
+      });
+
+      if (res.status !== 200 && res.status !== 204)
         throw new Error("삭제 실패");
-      }
 
       setMembers((prev) => prev.filter((m) => m.id !== id));
       setEditedMembers((prev) => prev.filter((m) => m.id !== id));
     } catch (err) {
-      console.error("삭제 실패:", err);
+      console.error(err);
       alert("삭제 실패");
     }
   };
 
-  // --- 관리자 페이지 렌더링 ---
   return (
     <div className="min-h-screen p-4 bg-gray-100">
       <AdminHeader />
-    
+
       {loading ? (
-        <p className="text-center text-xl text-indigo-600">데이터 로딩 중...</p>
+        <p className="text-center">멤버 로딩 중...</p>
       ) : members.length === 0 ? (
-        <p className="text-center text-lg text-gray-500 border-2 border-dashed p-10 rounded-lg bg-white">
-          아직 등록된 멤버가 없습니다. '새 멤버 추가'를 눌러 시작하세요.
-        </p>
+        <p className="text-center">아직 멤버가 없습니다.</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {editedMembers.map((member) => (
+          {editedMembers.map((m) => (
             <div
-              key={member.id}
-              className="border p-5 rounded-xl bg-white shadow-lg space-y-3 flex flex-col"
+              key={m.id}
+              className="border p-5 rounded-xl bg-white shadow-lg"
             >
-              <h3 className="text-lg font-bold text-gray-700">
-                ID: {member.id}
-              </h3>
+              <h3 className="text-lg font-bold">ID: {m.id}</h3>
 
-              {/* 이름 (name) */}
-              <label className="text-sm font-medium text-gray-600">{MEMBER_FIELDS.name}:</label>
+              <label>이름</label>
               <input
                 className="w-full border p-2 rounded"
-                value={member.name}
+                value={m.name}
                 onChange={(e) =>
                   setEditedMembers((prev) =>
-                    prev.map((m) =>
-                      m.id === member.id
-                        ? { ...m, name: e.target.value }
-                        : m
+                    prev.map((x) =>
+                      x.id === m.id ? { ...x, name: e.target.value } : x
                     )
                   )
                 }
               />
 
-              {/* 소개 (introduction) */}
-              <label className="text-sm font-medium text-gray-600">{MEMBER_FIELDS.introduction}:</label>
+              <label>소개</label>
               <textarea
                 className="w-full border p-2 rounded h-24 resize-none"
-                value={member.introduction}
+                value={m.introduction}
                 onChange={(e) =>
                   setEditedMembers((prev) =>
-                    prev.map((m) =>
-                      m.id === member.id
-                        ? { ...m, introduction: e.target.value }
-                        : m
+                    prev.map((x) =>
+                      x.id === m.id
+                        ? { ...x, introduction: e.target.value }
+                        : x
                     )
                   )
                 }
               />
 
-              {/* 이미지 URL (imageUrl) */}
-              <label className="text-sm font-medium text-gray-600">
-                {MEMBER_FIELDS.imageUrl}:
-              </label>
-              <input
-                className="w-full border p-2 rounded text-sm"
-                value={member.imageUrl || ""}
-                onChange={(e) =>
-                  setEditedMembers((prev) =>
-                    prev.map((m) =>
-                      m.id === member.id
-                        ? { ...m, imageUrl: e.target.value }
-                        : m
-                    )
-                  )
-                }
-              />
+              <label>이미지</label>
+              <div className="flex flex-col space-y-2">
+                <img
+                  src={m.imageUrl || ProfileIcon}
+                  alt="preview"
+                  className="w-24 h-24 object-cover rounded-lg border bg-gray-50"
+                />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleImageUpload(e, m.id)}
+                />
+              </div>
 
-              {/* 버튼 영역 */}
-              <div className="mt-4 pt-3 border-t border-gray-100 space-y-2">
+              <div className="mt-4 space-y-2">
                 <button
-                  onClick={() => handleSave(member.id)}
-                  className="w-full px-4 py-2 bg-black text-white font-semibold rounded-lg hover:bg-gray-800 transition"
+                  onClick={() => handleSave(m.id)}
+                  className="w-full px-4 py-2 bg-black text-white rounded"
                 >
                   수정
                 </button>
 
                 <button
-                  onClick={() => handleDelete(member.id)}
-                  className="w-full px-4 py-2 font-semibold border border-gray-100 rounded-lg hover:bg-gray-300 transition"
+                  onClick={() => handleDelete(m.id)}
+                  className="w-full px-4 py-2 border rounded"
                 >
                   삭제
                 </button>
@@ -216,14 +253,12 @@ export default function AdminMemberPage() {
           ))}
         </div>
       )}
+
       <button
         onClick={handleAdd}
-        className="fixed bottom-10 right-10 bg-white p-4 rounded-full shadow-lg hover:bg-gray-200 transition z-40 flex items-center justify-center text-sm font-bold"
-        aria-label="글 작성하기"
-        title="새 글 작성하기"
+        className="fixed bottom-10 right-10 bg-white p-4 rounded-full shadow-lg"
       >
-        <img src={ProfileIcon} alt="Write" className="w-6 h-6 mr-2" />
-        글 작성하기
+        새 멤버 추가
       </button>
     </div>
   );

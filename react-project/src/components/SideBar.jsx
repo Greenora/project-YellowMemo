@@ -55,29 +55,56 @@ function Sidebar() {
     fetchData();
   }, [userId]);
 
+  // 프로필 사진 변경 (파일 업로드 방식)
   const handleProfileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    try {
-      const formData = new FormData();
-      formData.append("image", file);
+    if (!file.type.startsWith("image/")) {
+      alert("이미지 파일만 업로드할 수 있습니다.");
+      return;
+    }
 
+    try {
+      // 1) FormData 생성
+      const formData = new FormData();
+      formData.append("file", file);
+
+      // 2) 업로드도 apiFetch로 처리 (Authorization 포함)
+      const uploadRes = await apiFetch("/uploads", {
+        method: "POST",
+        body: formData,           // FormData면 Content-Type 자동 제거됨
+      });
+
+      if (!uploadRes.ok) {
+        console.error("업로드 실패:", uploadRes);
+        alert("프로필 사진 업로드에 실패했습니다.");
+        return;
+      }
+
+      // 서버가 반환하는 파일 경로
+      const imageUrl = `${process.env.REACT_APP_API_URL}${uploadRes.data.url}`;
+
+      // 3) 프로필 업데이트 PATCH 요청
       const patchRes = await apiFetch("/users/me", {
         method: "PATCH",
-        body: formData,
-        isFormData: true,
+        body: JSON.stringify({ image_url: imageUrl }),
+        headers: { "Content-Type": "application/json" },
       });
 
       if (patchRes.ok) {
-        await new Promise((r) => setTimeout(r, 500));
         await refreshUserData();
       } else {
-        console.error("업로드 실패:", patchRes);
+        console.error("프로필 업데이트 실패:", patchRes);
+        alert("프로필 사진 업데이트에 실패했습니다.");
       }
     } catch (error) {
-      console.log("프로필 업데이트 오류:", error);
+      console.error("프로필 업데이트 오류:", error);
+      alert("프로필 사진 업로드 실패");
     }
+
+    // 파일 input 초기화
+    e.target.value = "";
   };
 
   const handleNicknameSave = async () => {

@@ -82,22 +82,20 @@ export default function Login() {
         Think, memo, create your own idea board by just One-click
       </p>
     
-      <div className="flex flex-col items-center w-full mt-24">  
-        <div className="flex flex-col items-center w-full max-w-[700px]">
-          <AuthInputBox
-            value={loginId}
-            onChange={(e) => setLoginId(e.target.value)}
-            placeholder="ID"
-            hasError={!!error}
-          />
-          <AuthInputBox
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="PW"
-            type="password"
-            hasError={!!error}
-          />
-        </div>
+      <form onSubmit={handleLogin} className="flex flex-col items-center justify-center w-full mt-24">
+        <AuthInputBox
+          value={loginId}
+          onChange={(e) => setLoginId(e.target.value)}
+          placeholder="ID"
+          hasError={!!error}
+        />
+        <AuthInputBox
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="PW"
+          type="password"
+          hasError={!!error}
+        />
 
         {error && (
           <p className="text-[#ff0000] text-base mb-1 w-[400px] text-center">
@@ -106,29 +104,11 @@ export default function Login() {
         )}
 
         <CustomButton 
-          onClick={handleLogin}
           className="w-[180px] h-14 bg-white text-black rounded-full shadow-[0_2px_8px_0_rgba(0,0,0,0.08)] font-normal text-lg mt-5 mb-10"
         >
           Login
         </CustomButton>
-
-        <span className="flex flex-col gap-2 items-center w-[400px]">
-          <p className="text-base text-black">
-            I don’t have{" "}
-            <a href="/register" className="text-[#3b82f6] underline">
-              account
-            </a>
-          </p>
-          <p className="text-base text-black">
-            I forgot my{" "}
-            <a href="/reset-password" className="text-[#3b82f6] underline">
-              password
-            </a>
-          </p>
-        </span>
-
-        <Copyright />
-      </div>
+      </form>
     </div>
   );
 }
