@@ -1,5 +1,3 @@
-// src/pages/admin/AdminMembersPage.jsx
-
 import React, { useState, useEffect } from "react";
 import useCustomFetch from "../../hooks/useCustomFetch";
 import AdminHeader from "../../components/AdminHeader";
@@ -11,14 +9,12 @@ export default function AdminMembersPage() {
   const [editedMembers, setEditedMembers] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  /** 절대 URL 변환 */
   const getAbsoluteUrl = (path) => {
     if (!path) return "";
     if (path.startsWith("http://") || path.startsWith("https://")) return path;
     return `${process.env.REACT_APP_API_URL}${path}`;
   };
 
-  /** 멤버 불러오기 */
   const fetchMembers = async () => {
     setLoading(true);
     try {
@@ -45,7 +41,6 @@ export default function AdminMembersPage() {
     fetchMembers();
   }, []);
 
-  /** 멤버 추가 */
   const handleAdd = async () => {
     const newMember = {
       name: "새 멤버",
@@ -86,7 +81,6 @@ export default function AdminMembersPage() {
     }
 
     try {
-      // 1) 이미지 업로드
       const formData = new FormData();
       formData.append("file", file);
 
@@ -101,7 +95,6 @@ export default function AdminMembersPage() {
 
       const imageUrl = getAbsoluteUrl(uploadRes.data.url);
 
-      // 2) 멤버 데이터 PATCH
       const patchRes = await apiFetch(`/members/${id}`, {
         method: "PATCH",
         body: JSON.stringify({ imageUrl }),
@@ -110,7 +103,6 @@ export default function AdminMembersPage() {
 
       if (!patchRes.ok) throw new Error("이미지 수정 실패");
 
-      // 3) UI 반영
       setMembers((prev) =>
         prev.map((m) => (m.id === id ? { ...m, imageUrl } : m))
       );
@@ -127,7 +119,6 @@ export default function AdminMembersPage() {
     e.target.value = "";
   };
 
-  /** 수정(PATCH) */
   const handleSave = async (id) => {
     const original = members.find((m) => m.id === id);
     const edited = editedMembers.find((m) => m.id === id);
@@ -165,7 +156,6 @@ export default function AdminMembersPage() {
     }
   };
 
-  /** 삭제 */
   const handleDelete = async (id) => {
     if (!window.confirm("정말 삭제하시겠습니까?")) return;
 
