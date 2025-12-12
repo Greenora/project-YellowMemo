@@ -55,7 +55,7 @@ function Sidebar() {
     fetchData();
   }, [userId]);
 
-  // 프로필 사진 변경 핸들러 (파일 업로드 방식)
+  // 프로필 사진 변경 (파일 업로드 방식)
   const handleProfileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
