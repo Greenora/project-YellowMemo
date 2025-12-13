@@ -27,8 +27,8 @@ import { UploadsModule } from './uploads/uploads.module';
       password: process.env.DB_PASSWORD,
       database: process.env.DB_DATABASE,
       entities: [__dirname + '/**/*.entity{.ts,.js}'], // 엔티티 파일 자동 로드
-      synchronize: true, // 개발용: 엔티티 변경 시 DB 자동 동기화 (프로덕션에서는 false)
-      migrationsRun: false, // synchronize: true 사용 시 마이그레이션 비활성화
+      synchronize: false, // 마이그레이션 기반으로 스키마 관리
+      migrationsRun: true, // 앱 시작 시 등록된 마이그레이션 실행
     }),
 
     //만든 모듈들
