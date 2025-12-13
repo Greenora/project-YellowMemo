@@ -27,7 +27,7 @@ export default function PostCreate() {
 
   // 텍스트박스 추가
   const handleAddTextbox = () => {
-    const newId = Date.now(); // 현재 시간 가져와서 숫자로, z 인덱스 없으므로 가장 최신에 만든 텍스트 박스 구분할 필요 X, -> 1, 2, 3... 일 필요 X
+    const newId = `text-${Date.now()}`; // 현재 시간 가져와서 숫자로, z 인덱스 없으므로 가장 최신에 만든 텍스트 박스 구분할 필요 X, -> 1, 2, 3... 일 필요 X
     setTextboxes(prev => [
       ...prev,
       {
@@ -80,7 +80,7 @@ export default function PostCreate() {
 
       // 서버 응답에서 URL 추출
       const data = response.data;
-      const newId = Date.now(); // 이미지 고유 ID 생성
+      const newId = `image-${Date.now()}`; // 이미지 고유 ID 생성
 
       // 이미지 상태에 추가 (URL로 저장)
       setImages(prev => [
@@ -111,20 +111,26 @@ export default function PostCreate() {
   const handleDragEnd = (event) => { // 드래그가 끝났을 때 호출, event 객체를 인자로 받음
     const { active, delta } = event; // active: 현재 드래그 중인 요소, delta: 드래그 이동 거리
     if (!active) return; // active가 없으면 return nothing
-    setTextboxes(prev => 
-      prev.map(tb => // 현재 드래그 중인 텍스트박스의 id와 일치하는 경우
-        tb.id === active.id // active.id와 일치하는 텍스트박스만 위치 갱신
-          ? { ...tb, x: tb.x + (delta?.x || 0), y: tb.y + (delta?.y || 0) } // 기존 배열의 x, y 좌표에 delta 값을 더함
-          : tb // 일치하지 않는 텍스트박스는 그대로 유지
-      )
-    );
-    setImages(prev =>
-      prev.map(img => // 현재 드래그 중인 이미지의 id와 일치하는 경우
-        img.id === active.id // active.id와 일치하는 이미지만 위치 갱신
-          ? { ...img, x: img.x + (delta?.x || 0), y: img.y + (delta?.y || 0) } // 기존 배열의 x, y 좌표에 delta 값을 더함
-          : img // 일치하지 않는 이미지는 그대로 유지
-      )
-    );
+
+    const activeId = String(active.id);
+
+    if (activeId.startsWith("text")) {
+      setTextboxes(prev => 
+        prev.map(tb => // 현재 드래그 중인 텍스트박스의 id와 일치하는 경우
+          tb.id === active.id // active.id와 일치하는 텍스트박스만 위치 갱신
+            ? { ...tb, x: tb.x + (delta?.x || 0), y: tb.y + (delta?.y || 0) } // 기존 배열의 x, y 좌표에 delta 값을 더함
+            : tb // 일치하지 않는 텍스트박스는 그대로 유지
+        )
+      );
+    } else if (activeId.startsWith("image")) {
+        setImages(prev =>
+          prev.map(img => // 현재 드래그 중인 이미지의 id와 일치하는 경우
+            img.id === active.id // active.id와 일치하는 이미지만 위치 갱신
+              ? { ...img, x: img.x + (delta?.x || 0), y: img.y + (delta?.y || 0) } // 기존 배열의 x, y 좌표에 delta 값을 더함
+              : img // 일치하지 않는 이미지는 그대로 유지
+          )
+        );
+    }
   };
 
   const handleBoardClick = () => setEditingId(null); // 보드 클릭 시 편집 중인 텍스트박스 해제
