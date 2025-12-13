@@ -17,10 +17,16 @@ export class PostsService {
   async create(createPostDto: CreatePostDto, userId: number): Promise<Post>{
     const {title, contents} = createPostDto;
 
+    // contents 배열의 각 아이템에 자동으로 ID 부여
+    const contentsWithIds = contents.map((item, index) => ({
+      ...item,
+      id: index + 1, // 1부터 시작하는 순차 ID
+    }));
+
     // 새 post 엔티티 생성
     const newPost = this.postsRepository.create({
       title,
-      contents,  // json 타입 컬럼에 배열 통째로 저장
+      contents: contentsWithIds,  // ID가 부여된 배열 저장
       userId,    // 토큰에서 넘어온 ID 저장
     });
 
@@ -83,6 +89,24 @@ export class PostsService {
      if (post.userId !== userId) {  //권한 확인: 게시물의 주인과 토큰의 userid가 같은지?
       throw new ForbiddenException('수정 권한이 없습니다.'); //403 에러
      }
+
+     // contents 수정 시 ID 처리
+     if (updatePostDto.contents) {
+       const existingIds = new Set(
+         (post.contents as any[]).map(item => item.id).filter(id => id != null)
+       );
+       const maxId = existingIds.size > 0 ? Math.max(...existingIds) : 0;
+       let nextId = maxId + 1;
+
+       // 기존 ID 유지, 새 아이템에만 ID 부여
+       updatePostDto.contents = updatePostDto.contents.map(item => {
+         if (item.id && existingIds.has(item.id)) {
+           return item; // 기존 아이템은 ID 유지
+         }
+         return { ...item, id: nextId++ }; // 새 아이템에 ID 부여
+       });
+     }
+
      const updatepost = Object.assign(post, updatePostDto); //통과하면 수정할 내용을 기존 post 객체에 덮어씀
      
      await this.postsRepository.save(updatepost); //db에 저장

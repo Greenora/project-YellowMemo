@@ -4,6 +4,12 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 // Contents 배열 안의 개별 스티커 객체 타입
 class ContentItemDto {
+  @ApiPropertyOptional({ description: '아이템 고유 ID (수정 시에만 사용, 생성 시 자동 부여)', example: 1 })
+  @IsNumber()
+  @IsOptional()
+  @Type(() => Number)
+  id?: number; // (선택적) 수정 시 기존 아이템 식별용
+
   @ApiProperty({ description: '콘텐츠 타입', enum: ['text', 'image'], example: 'text' })
   @IsString()
   @IsNotEmpty()
