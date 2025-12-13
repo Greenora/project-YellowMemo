@@ -43,18 +43,18 @@ export default function PostEdit() {
             content: item.value,
             x: Number(item.x),
             y: Number(item.y),
-            id: Number(item.id)
+            id: `text-${item.id}`
           }));
 
         // image
         const loadedImages = contents
           .filter(item => item.type === 'image')
-          .map(item => ({
+          .map((item, index) => ({
             ...item,
             url: item.url,
             x: Number(item.x),
             y: Number(item.y),
-            id: Number(item.id)
+            id: item.id ? `image-${item.id}` : `image-load-${index}-${Date.now()}`
           }));
 
         setTextboxes(loadedTextboxes);
@@ -141,7 +141,7 @@ export default function PostEdit() {
 
       // 서버 응답에서 URL 추출
       const data = response.data;
-      const newId = Date.now(); // 이미지 고유 ID 생성
+      const newId = `image-new-${Date.now()}`; // 이미지 고유 ID 생성
 
       // 이미지 상태에 추가 (URL로 저장)
       setImages(prev => [
@@ -151,7 +151,7 @@ export default function PostEdit() {
           x: Math.round(400 + Math.random() * 50),
           y: Math.round(100 + Math.random() * 50),
           z: prev.length + 1,
-          src: `${process.env.REACT_APP_API_URL}${data.url}`,
+          url: `${process.env.REACT_APP_API_URL}${data.url}`,
           userId: userId,
         },
       ]);
@@ -168,29 +168,37 @@ export default function PostEdit() {
     const { active, delta } = event;// active: 드래그한 요소, delta: 움직인 거리 (x, y)
     if (!active) return; //드래그한 요소 없으면 아무 작업 안 함
 
-    //텍스트박스 위치 업데이트
-    setTextboxes((prev) => 
-      prev.map((tb) =>
-        String(tb.id) === String(active.id) //드래그 중인 id와 일치하는 경우
-          ? { ...tb, x: tb.x + (delta?.x || 0), y: tb.y + (delta?.y || 0) } // x와 y 좌표를 움직인 거리만큼 더해줌
-          : tb // 일치하지 않으면 그대로 유지
-      )
-    );
-    //이미지 위치 업데이트
-    setImages((prev) =>
-      prev.map((img) =>
-        String(img.id) === String(active.id) //드래그 중인 id와 일치하는 경우
-          ? { ...img, x: img.x + (delta?.x || 0), y: img.y + (delta?.y || 0) }// x와 y 좌표를 움직인 거리만큼 더해줌
-          : img // 일치하지 않으면 그대로 유지
-      )
-    );
+    const activeId = String(active.id);
+
+    if (activeId.startsWith("text")) {
+      //텍스트박스 위치 업데이트
+      setTextboxes((prev) => 
+        prev.map((tb) =>
+          tb.id === activeId //드래그 중인 id와 일치하는 경우
+            ? { ...tb, x: tb.x + (delta?.x || 0), y: tb.y + (delta?.y || 0) } // x와 y 좌표를 움직인 거리만큼 더해줌
+            : tb // 일치하지 않으면 그대로 유지
+        )
+      );
+    }
+
+    if (activeId.startsWith("image")) {
+      //이미지 위치 업데이트
+      setImages((prev) =>
+        prev.map((img) =>
+          String(img.id) === String(active.id) //드래그 중인 id와 일치하는 경우
+            ? { ...img, x: img.x + (delta?.x || 0), y: img.y + (delta?.y || 0) }// x와 y 좌표를 움직인 거리만큼 더해줌
+            : img // 일치하지 않으면 그대로 유지
+        )
+      );
+    }
   };
 
   const handleBoardClick = () => setEditingId(null); // 보드 클릭 시 편집 중인 텍스트박스 해제 
 
   // 텍스트박스 추가
   const handleAddTextbox = () => {
-    const newId = Date.now(); // 현재 시간 이용해서 id 생성 
+    const newId = `text-new-${Date.now()}`; // 현재 시간 이용해서 id 생성 
+    
     setTextboxes((prev) => [
       ...prev,
       {
@@ -207,26 +215,28 @@ export default function PostEdit() {
 
   const handleSave = async () => {
     try {
-      // 텍스트박스 저장/수정
-      const finalTextboxes = textboxes.map((tb) => ({
-        type: 'text',
-        value: tb.content,
-        x: tb.x,
-        y: tb.y,
-        id: tb.id,
-        isNew: tb.isNew || undefined
-      }));
-
-      const finalImages = images.map((img) => ({
-        type: 'image',
-        url: img.url,
-        x: img.x,
-        y: img.y,
-        id: img.id,
-        isNew: img.isNew || undefined
-      }));
-
-      const finalContents = [...finalTextboxes, ...finalImages];
+      const finalContents = [
+        ...textboxes.map((tb) => {
+          const isExisting = String(tb.id).startsWith("text-") && !String(tb.id).includes("new");
+          return {
+            type: 'text',
+            value: tb.content,
+            x: tb.x,
+            y: tb.y,
+            id: isExisting ? Number(tb.id.replace("text-", "")) : undefined
+          };
+        }),
+        ...images.map((img) => {
+          const isExisting = String(img.id).startsWith("image-") && !String(img.id).includes("new");
+          return {
+            type: 'image',
+            url: img.url,
+            x: img.x,
+            y: img.y,
+            id: isExisting ? Number(img.id.replace("image-", "")) : undefined
+          };
+        })
+      ];
 
       const postTitle = (textboxes.length >0 && textboxes[0].content.trim() !== "") ? textboxes[0].content
       : "no title";
