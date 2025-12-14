@@ -172,7 +172,7 @@ function Home() {
               <p className="text-lg text-gray-700 leading-relaxed fade-in-up">
                 프로젝트는 {" "}
                 <a
-                  href="https://github.com/girlznight/Project-GirzDay-react-repo"
+                  href="https://github.com/Greenora/project-YellowMemo"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 underline hover:text-blue-800 transition-colors"
