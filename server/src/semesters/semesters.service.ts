@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ForbiddenException } from '@nestjs/common';
 import { CreateSemesterDto } from './dto/create-semester.dto';
 import { UpdateSemesterDto } from './dto/update-semester.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -12,7 +12,7 @@ export class SemestersService {
     private semestersRepository: Repository<Semester>,
   ) {}
 
-  create(createSemesterDto: CreateSemesterDto) {
+  create(createSemesterDto: CreateSemesterDto & { userId: number }) {
     return this.semestersRepository.save(createSemesterDto);
   }
 
@@ -37,14 +37,20 @@ export class SemestersService {
     return semesters;
   }
 
-  async update(id: number, updateSemesterDto: UpdateSemesterDto) {
+  async update(id: number, updateSemesterDto: UpdateSemesterDto, requesterUserId: number) {
     const semester = await this.findOne(id);
+    if (semester.userId !== requesterUserId) {
+      throw new ForbiddenException('수정 권한이 없습니다.');
+    }
     Object.assign(semester, updateSemesterDto);
     return this.semestersRepository.save(semester);
   }
 
-  async remove(id: number) {
+  async remove(id: number, requesterUserId: number) {
     const semester = await this.findOne(id);
+    if (semester.userId !== requesterUserId) {
+      throw new ForbiddenException('삭제 권한이 없습니다.');
+    }
     await this.semestersRepository.remove(semester);
     return { message: '게시물이 삭제되었습니다.' };
   }
