@@ -15,7 +15,7 @@ export default function AdminHeader() {
         });
 
         // 관리자 조건 검사
-        if (user.data.role !== "admin" && user.data.nickname !== "관리자") {
+        if (user.data.role !== "admin" && user.data.username !== "admin") {
           alert("관리자만 접근할 수 있습니다.");
           navigate("/board");
         }
