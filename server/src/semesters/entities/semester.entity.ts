@@ -17,6 +17,9 @@ export class Semester extends BaseEntity {
     @Column({type: 'longtext', nullable: true})
     imageUrl: string;
 
+    @Column()
+    userId: number; // 작성자 ID
+
     @CreateDateColumn()
     createdAt: Date;
 }

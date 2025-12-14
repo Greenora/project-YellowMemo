@@ -35,7 +35,8 @@ export class SemestersController {
     if (createSemesterDto.type === 'semester_info' && user.role !== 'admin') {
       throw new ForbiddenException('현지학기제 소개는 관리자만 작성할 수 있습니다.');
     }
-    return this.semestersService.create(createSemesterDto);
+    // 작성자 저장
+    return this.semestersService.create({ ...createSemesterDto, userId: user.id } as any);
   }
 
   @Get()
@@ -116,8 +117,9 @@ export class SemestersController {
       }
     }
   })
-  update(@Param('id') id: string, @Body() updateSemesterDto: UpdateSemesterDto) {
-    return this.semestersService.update(+id, updateSemesterDto);
+  update(@Param('id') id: string, @Body() updateSemesterDto: UpdateSemesterDto, @Req() req: Request) {
+    const user = req.user as User;
+    return this.semestersService.update(+id, updateSemesterDto, user.id);
   }
 
   @Delete(':id')
@@ -127,7 +129,8 @@ export class SemestersController {
   @ApiNoContentResponse({
     description: '현지학기제가 성공적으로 삭제되었습니다.'
   })
-  remove(@Param('id') id: string) {
-    return this.semestersService.remove(+id);
+  remove(@Param('id') id: string, @Req() req: Request) {
+    const user = req.user as User;
+    return this.semestersService.remove(+id, user.id);
   }
 }
