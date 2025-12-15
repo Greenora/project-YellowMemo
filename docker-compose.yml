@@ -8,8 +8,17 @@ services:
     volumes:
       - ./server:/usr/src/app
       - /usr/src/app/node_modules
+      - ./server/uploads:/usr/src/app/uploads  # 업로드 이미지 저장 (컨테이너 재시작해도 유지)
     env_file:
       - ./.env  # 루트의 .env 파일 사용
+    # 컨테이너 시작 시 자동 초기화: npm install → MySQL 대기 → migration → 개발서버 시작
+    command: >
+      sh -c "
+        npm install && \
+        until nc -z mysql 3306; do echo 'waiting for mysql...'; sleep 2; done && \
+        npm run migration:run && \
+        npm run start:dev
+      "
     depends_on:
       - mysql
 

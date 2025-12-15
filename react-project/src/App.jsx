@@ -11,24 +11,34 @@ import PostCreate from "./pages/PostCreate/PostCreate";
 import OurTeam from "./pages/OurTeam/OurTeam";
 import JapanProgram from "./pages/JapanProgram/JapanProgram";
 import OsakaPage from './pages/OsakaProgram/Osaka';
+import BoardPage from './pages/Borad/BoardPage';
+import { AuthProvider } from './hooks/useAuthContext';
+import AdminPage from './pages/Admin/AdminPage';
+import AdminSemesterPage from './pages/Admin/AdminSemesterPage';
+import AdminMemberPage from './pages/Admin/AdminMemberPage';
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/post/:id" element={<Post />} />
-        <Route path="/post/edit/:id" element={<PostEdit />} />
-        <Route path="/post/create" element={<PostCreate />} />
-        <Route path="/our-team" element={<OurTeam />} />
-        <Route path="/program-introduce" element={<JapanProgram />} />
-        <Route path="/osaka-introduce" element={<OsakaPage />} />
-
-      </Routes>
-    </BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/post/:id" element={<Post />} />
+          <Route path="/post/edit/:id" element={<PostEdit />} />
+          <Route path="/post/create" element={<PostCreate />} />
+          <Route path="/our-team" element={<OurTeam />} />
+          <Route path="/program-introduce" element={<JapanProgram />} />
+          <Route path="/osaka-introduce" element={<OsakaPage />} />
+          <Route path="/board" element={<BoardPage />} />
+          <Route path="/admin" element={<AdminPage />} />
+          <Route path="/admin/semester" element={<AdminSemesterPage />} />
+          <Route path="/admin/member" element={<AdminMemberPage />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 

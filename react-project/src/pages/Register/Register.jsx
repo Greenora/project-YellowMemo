@@ -19,8 +19,70 @@ export default function Register() {
 
 //화면에 보여지는 부분
 
-  return(
-    <div className="min-h-screen bg-[#fcfcf8] px-16 pt-20">
+  // 회원가입 함수
+  const handleRegister = async () => {
+    setError("");
+
+    // 간단한 입력 검증
+    if (!loginId || !password || !confirmPw || !nickname) {
+      setError("모든 항목을 입력해주세요.");
+      return;
+    }
+
+    if (password !== confirmPw) {
+      setError("비밀번호와 확인 비밀번호가 일치하지 않습니다.");
+      return;
+    }
+
+    try {
+      const res = await customFetch("/auth/register", {
+        method: "POST",
+        body: JSON.stringify({
+          username: loginId,
+          password: password,
+          nickname: nickname,
+        }),
+      });
+
+      if (!res.ok) {
+        setError(res.message || "회원가입 실패");
+        return;
+      }
+
+      // 회원가입 성공 시 로그인 페이지로 이동
+      navigate("/login");
+    } catch (err) {
+      console.error(err);
+      setError("회원가입 중 오류가 발생했습니다.");
+    }
+  };
+
+   // 토큰 만료 확인 함수
+  const isTokenExpired = (token) => {
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      return Date.now() >= payload.exp * 1000;
+    } catch {
+      return true;
+    }
+  };
+    // 로그인 상태면 보드로 자동 리다이렉트
+      const redirectIfLoggedIn = useCallback(() => {
+      const token = localStorage.getItem("jwtToken");
+
+        if (token && !isTokenExpired(token)) {
+          // 토큰이 있고 유효하면 보드로 이동
+          navigate("/board", { replace: true });
+        }
+        // 토큰이 없거나 만료되면 아무 것도 하지 않음 → 회원가입/로그인 페이지 유지
+      }, [navigate]);
+      
+      useEffect(() => {
+        redirectIfLoggedIn();
+      }, [redirectIfLoggedIn]);
+
+  return (
+    <div className="min-h-screen bg-[#fcfcf8] px-16 pt-20 pb-20">
       <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-2 text-gray-900">.Yellowmemo</h1>
       <p className="text-lg sm:text-lg md:text-xl lg:text-2xl text-gray-700 font-normal">
         Think, memo, create your own idea board by just One-click
@@ -56,8 +118,9 @@ export default function Register() {
             {error}
           </p>   //에러가 있을 때만 빨간 글씨로 화면에 보여줌 
         )}
-          
-        <CustomButton 
+
+        <CustomButton
+          type="submit"
           onClick={handleRegister}
           className="w-[180px] h-14 bg-white text-black rounded-full shadow-[0_2px_8px_0_rgba(0,0,0,0.08)] font-normal text-lg mt-4 mb-6"
         >
@@ -70,9 +133,6 @@ export default function Register() {
             account   {/*이미 계정이 있을때 누르면 로그인 페이지로 이동*/}
           </a>
         </span>
-
-        {/* 카피라이트 */}
-        <Copyright />
       </div>
     </div>
   )

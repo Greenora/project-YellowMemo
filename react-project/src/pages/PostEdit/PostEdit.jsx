@@ -6,13 +6,15 @@ import DraggableImage from "../../components/DraggableImage";
 import PostMenuBar from "../../components/PostMenuBar";
 import DiscardButton from "../../components/DiscardButton";
 import AlertPopup from "../../components/AlertPopup";
+import useCustomFetch from "../../hooks/useCustomFetch";
 
-function PostEdit() {
+export default function PostEdit() {
   const { id } = useParams(); //url 매개변수
   const postId = id; 
   const navigate = useNavigate(); //페이지 이동
   const fileInputRef = useRef(); // 파일 input 요소를 직접 제어하기 위한 ref
   const userId = Number(localStorage.getItem("userId")); // 사용자 아이디
+  const customFetch = useCustomFetch();
 
   const [textboxes, setTextboxes] = useState([]); // 현재 화면에 표시될 textbox
   const [originalTextboxes, setOriginalTextboxes] = useState([]); //처음 불러온 텍스트박스 원본 데이터
@@ -25,23 +27,46 @@ function PostEdit() {
 
   const [editingId, setEditingId] = useState(null); // 편집 중인 텍스트박스
 
-
-  // 텍스트박스, 이미지 불러오기
+  // 텍스트박스, 이미지 불러오기 통합
   useEffect(() => {
-    fetch(`http://localhost:5000/textbox?postId=${postId}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setTextboxes(data); // 현재 텍스트박스 상태 저장
-        setOriginalTextboxes(data); // 원본 백업 저장
-      });
+    const fetchPostData = async () => {
+      try {
+        const response = await customFetch(`/posts/${postId}`, { method: "GET" });
+        const postData = response.data;
+        const contents = postData.contents || [];
 
-    fetch(`http://localhost:5000/image?postId=${postId}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setImages(data); //현재 이미지 상태 저장
-        setOriginalImages(data); // 원본 백업 저장
-      });
-  }, [postId]); // postid가 바뀔 때마다 실행
+        // textbox
+        const loadedTextboxes = contents
+          .filter(item => item.type === 'text')
+          .map(item => ({
+            ...item,
+            content: item.value,
+            x: Number(item.x),
+            y: Number(item.y),
+            id: `text-${item.id}`
+          }));
+
+        // image
+        const loadedImages = contents
+          .filter(item => item.type === 'image')
+          .map((item, index) => ({
+            ...item,
+            url: item.url,
+            x: Number(item.x),
+            y: Number(item.y),
+            id: item.id ? `image-${item.id}` : `image-load-${index}-${Date.now()}`
+          }));
+
+        setTextboxes(loadedTextboxes);
+        setOriginalTextboxes(loadedTextboxes);
+        setImages(loadedImages);
+        setOriginalImages(loadedImages);
+      } catch (error) {
+        console.error("failed data loading:", error);
+      }
+    };
+    fetchPostData();
+  }, [postId, customFetch]); // postid가 바뀔 때마다 실행
 
   // 텍스트박스 내용 변경
   const handleTextboxChange = (id, value) => {
@@ -89,30 +114,53 @@ function PostEdit() {
     setImages((prev) => prev.filter((img) => img.id !== id)); // id 일치하지 않는 이미지만 화면에 표시
   };
 
-  // 이미지 추가
-  const handleAddImage = (e) => {
-    const file = e.target.files[0]; //파일 선택
-    if (!file) return; //파일 선택되지 않은 경우
+  // 이미지 추가 (파일 업로드 방식)
+  // 기존 Base64 방식 대신 서버에 파일을 업로드하고 URL을 받아서 사용
+  const handleAddImage = async (e) => {
+    const file = e.target.files[0]; // 선택된 파일 가져오기
+    if (!file) return; // 파일이 선택되지 않은 경우 처리
+    if (!file.type.startsWith("image/")) {
+      alert("이미지 파일만 업로드할 수 있습니다.");
+      return;
+    }
 
-    const reader = new FileReader(); //FileReader로 파일 읽음
-    reader.onload = (ev) => {
-      const newId = Date.now(); // id 생성
-      setImages((prev) => [
+    try {
+      // FormData 생성 - 파일 업로드용 데이터 형식
+      const formData = new FormData();
+      formData.append('file', file); // 'file' 필드에 파일 추가
+
+      // 서버에 파일 업로드 요청 (POST /uploads)
+      const response = await customFetch("/uploads", {
+        method: 'POST',
+        body: formData, // JSON이 아닌 FormData로 전송
+      });
+
+      if (!response.ok) {
+        throw new Error(response.message || '파일 업로드 실패');
+      }
+
+      // 서버 응답에서 URL 추출
+      const data = response.data;
+      const newId = `image-new-${Date.now()}`; // 이미지 고유 ID 생성
+
+      // 이미지 상태에 추가 (URL로 저장)
+      setImages(prev => [
         ...prev,
         {
           id: newId,
-          src: ev.target.result, //base64 이미지 데이터
-          x: 200 + Math.random() * 50, //임의 위치 지정
-          y: 300 + prev.length * 120,
+          x: Math.round(400 + Math.random() * 50),
+          y: Math.round(100 + Math.random() * 50),
           z: prev.length + 1,
-          postId: postId,
-          userId,
-          isNew: true, // 새 이미지 표시
+          url: `${process.env.REACT_APP_API_URL}${data.url}`,
+          userId: userId,
         },
       ]);
-    };
-    reader.readAsDataURL(file);
-    e.target.value = ""; // input 초기화
+    } catch (error) {
+      console.error('이미지 업로드 에러:', error);
+      alert('이미지 업로드에 실패했습니다.🥲');
+    }
+
+    e.target.value = ""; // 파일 input 초기화
   };
 
   // 드래그 종료 후 위치 갱신
@@ -120,29 +168,37 @@ function PostEdit() {
     const { active, delta } = event;// active: 드래그한 요소, delta: 움직인 거리 (x, y)
     if (!active) return; //드래그한 요소 없으면 아무 작업 안 함
 
-    //텍스트박스 위치 업데이트
-    setTextboxes((prev) => 
-      prev.map((tb) =>
-        tb.id === active.id //드래그 중인 id와 일치하는 경우
-          ? { ...tb, x: tb.x + (delta?.x || 0), y: tb.y + (delta?.y || 0) } // x와 y 좌표를 움직인 거리만큼 더해줌
-          : tb // 일치하지 않으면 그대로 유지
-      )
-    );
-    //이미지 위치 업데이트
-    setImages((prev) =>
-      prev.map((img) =>
-        img.id === active.id //드래그 중인 id와 일치하는 경우
-          ? { ...img, x: img.x + (delta?.x || 0), y: img.y + (delta?.y || 0) }// x와 y 좌표를 움직인 거리만큼 더해줌
-          : img // 일치하지 않으면 그대로 유지
-      )
-    );
+    const activeId = String(active.id);
+
+    if (activeId.startsWith("text")) {
+      //텍스트박스 위치 업데이트
+      setTextboxes((prev) => 
+        prev.map((tb) =>
+          tb.id === activeId //드래그 중인 id와 일치하는 경우
+            ? { ...tb, x: tb.x + (delta?.x || 0), y: tb.y + (delta?.y || 0) } // x와 y 좌표를 움직인 거리만큼 더해줌
+            : tb // 일치하지 않으면 그대로 유지
+        )
+      );
+    }
+
+    if (activeId.startsWith("image")) {
+      //이미지 위치 업데이트
+      setImages((prev) =>
+        prev.map((img) =>
+          String(img.id) === String(active.id) //드래그 중인 id와 일치하는 경우
+            ? { ...img, x: img.x + (delta?.x || 0), y: img.y + (delta?.y || 0) }// x와 y 좌표를 움직인 거리만큼 더해줌
+            : img // 일치하지 않으면 그대로 유지
+        )
+      );
+    }
   };
 
   const handleBoardClick = () => setEditingId(null); // 보드 클릭 시 편집 중인 텍스트박스 해제 
 
   // 텍스트박스 추가
   const handleAddTextbox = () => {
-    const newId = Date.now(); // 현재 시간 이용해서 id 생성 
+    const newId = `text-new-${Date.now()}`; // 현재 시간 이용해서 id 생성 
+    
     setTextboxes((prev) => [
       ...prev,
       {
@@ -159,83 +215,53 @@ function PostEdit() {
 
   const handleSave = async () => {
     try {
-      // 텍스트박스 저장/수정
-      const updatedTextboxes = await Promise.all(
-        textboxes.map(async (tb) => {
-          if (tb.isNew) { //새로 추가된 텍스트박스는 POST 요청
-            const res = await fetch(`http://localhost:5000/textbox`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                id: tb.id,
-                postId: postId,
-                x: tb.x,
-                y: tb.y,
-                content: tb.content,
-              }),
-            });
-            const data = await res.json(); 
-            return { ...tb, id: data.id, isNew: false }; //저장한 건 false로 변경
-          } else { //기존 텍스트박스는 PATCH요청
-            await fetch(`http://localhost:5000/textbox/${tb.id}`, {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                postId: postId,
-                x: tb.x,
-                y: tb.y,
-                content: tb.content,
-              }),
-            });
-            return tb;
-          }
+      const finalContents = [
+        ...textboxes.map((tb) => {
+          const isExisting = String(tb.id).startsWith("text-") && !String(tb.id).includes("new");
+          return {
+            type: 'text',
+            value: tb.content,
+            x: tb.x,
+            y: tb.y,
+            id: isExisting ? Number(tb.id.replace("text-", "")) : undefined
+          };
+        }),
+        ...images.map((img) => {
+          const isExisting = String(img.id).startsWith("image-") && !String(img.id).includes("new");
+          return {
+            type: 'image',
+            url: img.url,
+            x: img.x,
+            y: img.y,
+            id: isExisting ? Number(img.id.replace("image-", "")) : undefined
+          };
         })
-      );
+      ];
 
-      setTextboxes(updatedTextboxes); //수정된 텍스트박스 상태 반영
+      const postTitle = (textboxes.length >0 && textboxes[0].content.trim() !== "") ? textboxes[0].content
+      : "no title";
 
-      // 이미지 저장/수정
-      await Promise.all(
-        images.map((img) => {
-          const isNew = img.isNew;
-          const url = isNew
-            ? `http://localhost:5000/image` 
-            : `http://localhost:5000/image/${img.id}`;
-          const method = isNew ? "POST" : "PATCH"; //새 이미지이면 POST, 기존 이미지면 PATCH
+      const requestBody = {
+        title: postTitle,
+        contents: finalContents,
+        deletedTextboxIds: deletedTextboxIds,
+        deletedImageIds: deletedImageIds
+      };
 
-          return fetch(url, {
-            method,
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              id: img.id,
-              src: img.src,
-              x: img.x,
-              y: img.y,
-              postId: postId,
-              userId: userId,
-            }),
-          });
-        })
-      );
+      await customFetch(`/posts/${postId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      });
 
-      // 삭제된 텍스트박스 삭제 요청
-      await Promise.all(
-        deletedTextboxIds.map((td) =>
-          fetch(`http://localhost:5000/textbox/${td}`, { method: "DELETE" })
-        )
-      );
-
-      // 삭제된 이미지 삭제 요청
-      await Promise.all(
-        deletedImageIds.map((imgId) =>
-          fetch(`http://localhost:5000/image/${imgId}`, { method: "DELETE" })
-        )
-      );
+      setDeletedTextboxIds([]);
+      setDeletedImageIds([]);
 
       alert("저장 완료!");
       navigate(`/post/${postId}`); //저장한 게시물 페이지로 이동
     } catch (error) {
-      alert("에러가 발생했습니다.");
+      console.error("저장 실패:", error);
+      alert("에러가 발생했습니다.🥲");
     }
   };
 
@@ -283,7 +309,7 @@ function PostEdit() {
             <DraggableImage
               key={img.id}
               id={img.id}
-              src={img.src}
+              src={img.url}
               x={img.x}
               y={img.y}
               onDelete={handleImageDelete} //이미지 삭제 함수
@@ -319,5 +345,3 @@ function PostEdit() {
     </div>
   );
 }
-
-export default PostEdit;

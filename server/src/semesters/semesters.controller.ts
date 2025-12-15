@@ -1,0 +1,136 @@
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, HttpCode, ForbiddenException, Req } from '@nestjs/common';
+import { SemestersService } from './semesters.service';
+import { CreateSemesterDto } from './dto/create-semester.dto';
+import { UpdateSemesterDto } from './dto/update-semester.dto';
+import { AuthGuard } from '@nestjs/passport';
+import type { Request } from 'express';
+import type { User } from 'src/users/entities/user.entity';
+import { ApiBearerAuth, ApiTags, ApiCreatedResponse, ApiOkResponse, ApiNoContentResponse } from '@nestjs/swagger';
+
+@ApiTags('Semesters')
+@Controller('semesters')
+export class SemestersController {
+  constructor(private readonly semestersService: SemestersService) {}
+
+  @Post()
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiCreatedResponse({
+    description: '현지학기제가 성공적으로 생성되었습니다.',
+    schema: {
+      example: {
+        id: 1,
+        type: 'semester_info',
+        title: '2024년 봄학기 오사카 현지학기제',
+        content: '오사카에서 진행되는 현지학기제 프로그램입니다. 일본 문화 체험과 언어 학습을 병행하며, 현지 대학과의 교류를 통해 글로벌 역량을 키울 수 있습니다.',
+        imageUrl: 'https://example.com/images/osaka-semester-2024.jpg',
+        createdAt: '2024-03-15T09:00:00.000Z',
+      }
+    }
+  })
+  create(@Body() createSemesterDto: CreateSemesterDto, @Req() req: Request) {
+    const user = req.user as User;
+    
+    // semester_info 타입은 admin만 작성 가능
+    if (createSemesterDto.type === 'semester_info' && user.role !== 'admin') {
+      throw new ForbiddenException('현지학기제 소개는 관리자만 작성할 수 있습니다.');
+    }
+    // 작성자 저장
+    return this.semestersService.create({ ...createSemesterDto, userId: user.id } as any);
+  }
+
+  @Get()
+  @ApiOkResponse({
+    description: '모든 현지학기제 목록을 조회합니다.',
+    schema: {
+      example: [
+        {
+          id: 1,
+          title: '2024년 봄학기 오사카 현지학기제',
+          content: '오사카에서 진행되는 현지학기제 프로그램입니다.',
+          imageUrl: 'https://example.com/images/osaka-semester-2024.jpg',
+          createdAt: '2024-03-15T09:00:00.000Z'
+        },
+        {
+          id: 2,
+          title: '2024년 가을학기 도쿄 현지학기제',
+          content: '도쿄에서 진행되는 현지학기제 프로그램입니다.',
+          imageUrl: 'https://example.com/images/tokyo-semester-2024.jpg',
+          createdAt: '2024-09-01T09:00:00.000Z'
+        }
+      ]
+    }
+  })
+  findAll() {
+    return this.semestersService.findAll();
+  }
+
+  @Get('type/:type')
+  @ApiOkResponse({ 
+    description: '특정 타입의 현지학기제 정보를 조회합니다. (osaka_review 또는 semester_info)',
+    schema: {
+      example: [
+        {
+          id: 1,
+          type: 'semester_info',
+          title: '2024년 봄학기 오사카 현지학기제',
+          content: '오사카에서 진행되는 현지학기제 프로그램입니다.',
+          imageUrl: 'https://example.com/images/osaka-semester-2024.jpg',
+          createdAt: '2024-03-15T09:00:00.000Z'
+        }
+      ]
+    }
+  })
+  findType(@Param('type') type: string) {
+    return this.semestersService.findType(type);
+  }
+
+  @Get(':id')
+  @ApiOkResponse({
+    description: '특정 현지학기제 정보를 조회합니다.',
+    schema: {
+      example: {
+        id: 1,
+        title: '2024년 봄학기 오사카 현지학기제',
+        content: '오사카에서 진행되는 현지학기제 프로그램입니다. 일본 문화 체험과 언어 학습을 병행하며, 현지 대학과의 교류를 통해 글로벌 역량을 키울 수 있습니다.',
+        imageUrl: 'https://example.com/images/osaka-semester-2024.jpg',
+        createdAt: '2024-03-15T09:00:00.000Z'
+      }
+    }
+  })
+  findOne(@Param('id') id: string) {
+    return this.semestersService.findOne(+id);
+  }
+
+  @Patch(':id')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    description: '현지학기제가 성공적으로 수정되었습니다.',
+    schema: {
+      example: {
+        id: 1,
+        title: '2024년 봄학기 오사카 현지학기제 (수정됨)',
+        content: '오사카에서 진행되는 현지학기제 프로그램입니다. 프로그램 내용이 업데이트되었습니다.',
+        imageUrl: 'https://example.com/images/osaka-semester-2024-updated.jpg',
+        createdAt: '2024-03-15T09:00:00.000Z'
+      }
+    }
+  })
+  update(@Param('id') id: string, @Body() updateSemesterDto: UpdateSemesterDto, @Req() req: Request) {
+    const user = req.user as User;
+    return this.semestersService.update(+id, updateSemesterDto, user.id);
+  }
+
+  @Delete(':id')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @HttpCode(204)
+  @ApiNoContentResponse({
+    description: '현지학기제가 성공적으로 삭제되었습니다.'
+  })
+  remove(@Param('id') id: string, @Req() req: Request) {
+    const user = req.user as User;
+    return this.semestersService.remove(+id, user.id);
+  }
+}

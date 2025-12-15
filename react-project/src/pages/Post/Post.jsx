@@ -10,6 +10,7 @@ import { DndContext } from "@dnd-kit/core";  // DndContext -> drag and drop 기�
 import Drag from "../../components/Drag";
 import { getMaxLineLength } from "../../components/textboxUtils";
 import Copyright from "../../components/Copyright";
+import LogoutButton from "../../components/LogoutButtom";
 
 import CommentIcon from "../../assets/post_comment.svg";
 import ShareIcon from "../../assets/post_share.svg";
@@ -17,15 +18,16 @@ import EditIcon from "../../assets/sidebar_pencil.svg";
 import DeleteIcon from "../../assets/discardbutton_trash.svg";
 import NoteBg from "../../assets/sticky-note.png";
 
-import usePostOwner from "../../hooks/usePostOwner";
-import useTextboxes from "../../hooks/useTextboxes";
-import useImages from "../../hooks/useImages";
+// import usePostOwner from "../../hooks/usePostOwner";
+// import useTextboxes from "../../hooks/useTextboxes";
+// import useImages from "../../hooks/useImages";
 import usePostits from "../../hooks/usePostits";
 import useOutsideClick from "../../hooks/useOutsideClick";
 import { useShare } from "../../hooks/useShare";
 import { handleAlertYes as deletePost } from "../../hooks/useDeletePost";
-import { handleDragEnd } from "../../hooks/useDragHandler";
-import { saveComment as saveCommentFn } from "../../hooks/useCommentPopup";
+// import { handleDragEnd } from "../../hooks/useDragHandler";
+// import { saveComment as saveCommentFn } from "../../hooks/useCommentPopup";
+import useCustomFetch from "../../hooks/useCustomFetch";
 
 // Post 페이지
 // 사용자가 만든 페이지를 보여주는 기능을 제공
@@ -87,14 +89,19 @@ function PostTextbox({ content }) {
 
 export default function Post() {
   const { id } = useParams(); // useParams 훅을 사용해서 현재 URL 파라미터에서의 ID 값을 id 변수에 저장
-  const nav = useNavigate(); // useNavigate 훅 사용해서 페이지 이동
-  const myId = Number(localStorage.getItem("userId") || 0); // userID로 저장된 값을 localStorage에서 꺼내서 number로 변환, userId가 없다면 0 반환
+  const navigate = useNavigate(); // useNavigate 훅 사용해서 페이지 이동
+  const customFetch = useCustomFetch();
 
+  const [myId, setMyId] = useState(0);
   const [showSide, setShowSide] = useState(false); // side-bar 표시 여부
   const [showShareAlert, setShowShareAlert] = useState(false); // 공유 알림 팝업 표시 여부
   const [openCmt, setOpenCmt] = useState(false); // 포스트잇 생성 팝업 열기 여부
   const [commentText, setCommentText] = useState(""); // 포스트잇 입력창 내용
   const [showAlert, setShowAlert] = useState(false); // 삭제 확인 알림창 표시 여부
+  const [textboxes, setTextboxes] = useState([]);
+  const [images, setImages] = useState([]);
+  const [postOwnerId, setPostOwnerId] = useState(null); // 게시글 작성자 ID
+
 
   const [hoverId, setHoverId] = useState(null); // 현재 마우스 올린 Post it의 ID (... 버튼 노출 제어용)
   const [editingId, setEditingId] = useState(null); // 편집 중인 Post it의 ID (어떤 post it을 수정할지)
@@ -102,28 +109,144 @@ export default function Post() {
 
   const sidebarRef = useRef(null); // SideBar 컴포넌트의 DOM 요소를 참조
 
-  const ownerId = usePostOwner(id); // 현재 Post의 작성자 userId
-  const isOwner = ownerId === myId; // 현재 사용자가 post 소유자인지 확인
-  const [textboxes] = useTextboxes(id); // text box 상태
-  const [images] = useImages(id); // image 상태
+  // const ownerId = usePostOwner(id); // 현재 Post의 작성자 userId
+  const isOwner = myId !== 0 && myId === postOwnerId; // 현재 사용자가 post 소유자인지 확인
+  // const [textboxes] = useTextboxes(id); // text box 상태
+  // const [images] = useImages(id); // image 상태
   const [postits, setPostits] = usePostits(id); // post it 상태
 
   useOutsideClick(sidebarRef, setShowSide, setHoverId);
   const { onShareClick, handleShareYes, handleShareNo } = useShare(setShowShareAlert);
 
-  function goEdit() { nav(`/post/edit/${id}`); }
-  function handleLogout() { localStorage.removeItem("userId"); }
+  function goEdit() { navigate(`/post/edit/${id}`); }
+  function handleLogout() {
+    localStorage.removeItem("jwtToken");
+    navigate('/');
+  }
   function onDiscard() { setShowAlert(true); }
   function handleAlertNo() { setShowAlert(false); }
 
-  function saveComment() {
-    saveCommentFn({ commentText, setPostits, postits, myId, setOpenCmt, setCommentText, NoteBg, postId: id });
+  useEffect(() => {
+    const fetchAllData = async () => {
+      try {
+        if (localStorage.getItem("jwtToken")) {
+          const userRes = await customFetch('/users/me', { method: "GET" });
+          const userData = userRes.data;
+          if (userData && userData.id) {
+            setMyId(userData.id);
+          };
+        }
+
+        const postRes = await customFetch(`/posts/${id}`, { method: "GET" });
+        const postData = postRes.data;
+
+        setPostOwnerId(postData.user?.id);
+
+        const contents = postData.contents || [];
+
+        const loadedTextboxes = contents
+          .filter(item => item.type === 'text')
+          .map((item, index) => ({
+            ...item,
+            id: item.id || `tb${index}`,
+            content: item.value
+          }));
+
+        const loadedImages = contents
+          .filter(item => item.type === 'image')
+          .map((item, index) => ({
+            ...item,
+            id: item.id || `img${index}`,
+            src: item.url }));
+
+        setTextboxes(loadedTextboxes);
+        setImages(loadedImages);
+      } catch (error) {
+        console.error("내 정보 불러오기 실패:", error);
+      }
+    };
+
+    fetchAllData();
+  }, [id, customFetch]);
+
+  const saveComment = async () => {
+    // 빈 내용 방지
+    if (!commentText.trim()) return;
+
+    try {
+      const res = await customFetch(`/posts/${id}/comments`, {
+        method: "POST",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: commentText,
+          x: Math.round(100 + Math.random()*50),
+          y: Math.round(100 + Math.random()*50),
+        }),
+      });
+
+      // 상태 업데이트
+      const newCommentData = res.data;
+
+      const newPostit = {
+        ...newCommentData,
+        content: newCommentData.text,
+        userId: newCommentData.user?.id || myId,
+      };
+
+      setPostits((prev) => [...prev, newPostit]);
+
+      setCommentText("");
+      setOpenCmt(false);
+    } catch (error) {
+      console.error("댓글 저장 실패:", error);
+      alert("댓글 저장 중 오류가 발생했습니다.🥲");
+    }
   }
+
+  const handleDragEnd = async (event) => {
+    const { active, delta } = event;
+    
+    // 드래그 대상이 없거나, 이동 거리가 없으면 종료
+    if (!active || !delta || (delta.x === 0 && delta.y === 0)) return;
+
+    const activeId = active.id;
+    const currentItem = postits.find(p => String(p.id) === String(activeId));
+
+    // 포스트잇 목록에 없는 건 무시
+    if (!currentItem) {
+      console.error("드래그 대상을 찾을 수 없습니다. ID:", activeId);
+      return;
+    };
+
+    const newX = Math.round(currentItem.x + delta.x);
+    const newY = Math.round(currentItem.y + delta.y);
+
+    setPostits(prev => prev.map(pt =>
+      pt.id === activeId ? { ...pt, x: newX, y: newY } : pt
+    ));
+
+    if (Number(currentItem.userId) === Number(myId)) {
+      try {
+        await customFetch(`/posts/${id}/comments/${activeId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            x: newX,
+            y: newY,
+            text: currentItem.content
+          }),
+        });
+      } catch (error) {
+        console.error("위치 저장 실패:", error);
+        alert("위치 저장에 실패했습니다.")
+      }
+    }
+  };
 
   return (
     <div className="relative min-h-screen bg-[#fcfcf8] p-4 overflow-hidden select-none">
       {/* 로그아웃 버튼 */}
-      <button onClick={handleLogout} className="fixed top-6 right-8 z-50 text-sm text-yellow-400">Logout</button>
+      <LogoutButton />
 
       {/* showSide가 false이면 sidebar toggle button이 보이기, 클릭 시 사이드바 열기 */}
       {!showSide && <SidebarToggleBtn onClick={() => setShowSide(true)} />}
@@ -139,12 +262,12 @@ export default function Post() {
 
       <div className="relative w-full h-[90vh] overflow-hidden z-[0]">
         {/* DndContext로 drag and drop 기능 활성화 */}
-        <DndContext onDragEnd={(e) => handleDragEnd(e, myId, postits, setPostits)}>
+        <DndContext onDragEnd={handleDragEnd}>
 
           {/* 텍스트박스 */}
           {textboxes.map((tb, i) => (
             <div 
-              key={tb.id} 
+              key={`tb${tb.id}`} 
               style={{ 
                 position: "absolute", 
                 left: tb.x, 
@@ -162,7 +285,7 @@ export default function Post() {
           {/* 포스트잇 */}
           <div className="absolute inset-0 z-[500]"> {/* inset-0은 top, right, left, bottom: 0을 한 번에 지정 */}
             {postits.map((pt, i) => ( // 포스트잇 배열을 순회하며 렌더링
-              <Drag key={pt.id} id={pt.id} position={{ x: pt.x, y: pt.y }}>
+              <Drag key={`pt${pt.id}`} id={pt.id} position={{ x: pt.x, y: pt.y }}>
                 <div
                   style={{
                     backgroundImage: `url(${NoteBg})`, // 포스트잇 배경 이미지
@@ -196,7 +319,7 @@ export default function Post() {
                         e.stopPropagation(); // 부모(Drag 컴포넌트)로 전파되는 걸 차단
                         e.preventDefault(); // 기본 드래그 동작 차단
                       }}
-                      onClick={() => { 
+                      onClick={() => {
                         setEditingId(pt.id); /* 어떤 포스트잇을 편집할지 ID를 기억 */
                       setDraftText(pt.content); /* 편집 팝업 안의 textarea에 원래 내용을 채워 넣음 */
                       }}
@@ -211,7 +334,7 @@ export default function Post() {
 
           {/* 이미지 */}
           {images.map((img, i) => ( // 이미지 배열 순회하며 렌더링
-            <div key={img.id} style={{ 
+            <div key={`img${img.id}`} style={{ 
               position: "absolute", 
               left: img.x, top: img.y, 
               width: img.width || 200, height: img.height || 200, zIndex: img.zIndex ?? i + 50  // z 인덱스, 없으면 index + 50으로 설정
@@ -269,7 +392,7 @@ export default function Post() {
         <AlertPopup 
           show={showAlert} 
           message="정말로 삭제하시겠습니까?" 
-          onYes={() => deletePost({ textboxes, images, postits, id, setShowAlert, nav })}  // Yes 클릭 시 호출
+          onYes={() => deletePost({ id, setShowAlert, navigate, customFetch })}  // Yes 클릭 시 호출
           onNo={handleAlertNo} // No 클릭 시 호출
         />
       }
@@ -289,29 +412,32 @@ export default function Post() {
         value={draftText} // 팝업 textarea에 표시할 텍스트
         onChange={setDraftText} // textarea 변경 시 draftText 업데이트
         onClose={() => setEditingId(null)} // × 클릭 시 편집 모드 종료
-        onSave={() => {
-          fetch(`http://localhost:5000/postit/${editingId}`, {
-            method: "PUT", // PUT 메서드 사용
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ 
-              ...postits.find(p => p.id === editingId), // 기존 post it 데이터
-              content: draftText // 수정된 내용 덮어쓰기
-            })
-          }).then(() => {
-            setPostits(ps => 
-              ps.map(p => 
-                p.id === editingId ? { ...p, content: draftText } : p // 로컬 post it 배열 순회하며 해당 아이디의 content만 교체
-            )
-          ); 
-            setEditingId(null); // 편집 모드 종료
-          });
+        onSave={async () => {
+          try {
+            await customFetch(`/posts/${id}/comments/${editingId}`, {
+              method: "PATCH",
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ text: draftText })
+            });
+
+            setPostits(ps => ps.map(p =>
+              p.id === editingId ? { ...p, content: draftText } : p)
+            );
+            setEditingId(null);
+          } catch (e) {
+            console.error("수정 실패", e)
+          }
         }}
-        onDelete={() => { // 휴지통 버튼 클릭 시 서버에 DELETE, 로컬 상태에서 제거
-          fetch(`http://localhost:5000/postit/${editingId}`, { method: "DELETE" // DELETE 메서드 사용
-          }).then(() => {
+
+        onDelete={async () => {
+          try {
+            await customFetch(`/posts/${id}/comments/${editingId}`, { method: "DELETE" });
+
             setPostits(ps => ps.filter(p => p.id !== editingId)); // 해당 post it만 필터링
             setEditingId(null); // 편집 모드 종료
-          });
+          } catch (e) {
+          console.error("삭제 실패", e);
+          }
         }}
       />
 

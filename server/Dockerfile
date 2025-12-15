@@ -1,5 +1,10 @@
 FROM node:20
 
+# Add netcat for simple TCP wait checks (used in compose command)
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends netcat-openbsd \
+	&& rm -rf /var/lib/apt/lists/*
+
 WORKDIR /usr/src/app
 
 COPY package*.json ./

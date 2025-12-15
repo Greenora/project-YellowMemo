@@ -25,7 +25,7 @@ function PostCreate() {
 
   // 텍스트박스 추가
   const handleAddTextbox = () => {
-    const newId = Date.now(); // 현재 시간 가져와서 숫자로, z 인덱스 없으므로 가장 최신에 만든 텍스트 박스 구분할 필요 X, -> 1, 2, 3... 일 필요 X
+    const newId = `text-${Date.now()}`; // 현재 시간 가져와서 숫자로, z 인덱스 없으므로 가장 최신에 만든 텍스트 박스 구분할 필요 X, -> 1, 2, 3... 일 필요 X
     setTextboxes(prev => [
       ...prev,
       {
@@ -51,32 +51,53 @@ function PostCreate() {
     if (editingId === id) setEditingId(null); // 삭제한 텍스트박스가 현재 편집 중인 경우 편집 모드 해제
   };
 
-  // 이미지 추가
-  const handleAddImage = (e) => {
-    const file = e.target.files[0]; // 파일 선택
+  // 이미지 추가 (파일 업로드 방식)
+  // 기존 Base64 방식 대신 서버에 파일을 업로드하고 URL을 받아서 사용
+  const handleAddImage = async (e) => {
+    const file = e.target.files[0]; // 선택된 파일 가져오기
     if (!file) return; // 파일이 선택되지 않은 경우 처리
     if (!file.type.startsWith("image/")) {
       alert("이미지 파일만 업로드할 수 있습니다.");
       return;
     }
-    const reader = new FileReader(); // FileReader를 사용하여 파일을 읽음
-    reader.onload = (ev) => { // 파일 읽기가 완료되면 실행
-      const newId = Date.now(); // 숫자 id로 통일
-      setImages(prev => [ 
-        ...prev, // 기존 이미지 배열 복사, 새 이미지 추가
+
+    try {
+      // FormData 생성 - 파일 업로드용 데이터 형식
+      const formData = new FormData();
+      formData.append('file', file); // 'file' 필드에 파일 추가
+
+      // 서버에 파일 업로드 요청 (POST /uploads)
+      const response = await customFetch("/uploads", {
+        method: 'POST',
+        body: formData, // JSON이 아닌 FormData로 전송
+      });
+
+      if (!response.ok) {
+        throw new Error(response.message || '파일 업로드 실패');
+      }
+
+      // 서버 응답에서 URL 추출
+      const data = response.data;
+      const newId = `image-${Date.now()}`; // 이미지 고유 ID 생성
+
+      // 이미지 상태에 추가 (URL로 저장)
+      setImages(prev => [
+        ...prev,
         {
           id: newId,
-          x: 200 + Math.random() * 50, // x 좌표 랜덤 생성, 여러 컴포넌트 겹필 때 알아보기 힘들어서 화면 중앙 아님 
-          y: 300 + prev.length * 120,
-          z: prev.length + 1, // 쌓임 순서, 이미지 추가 시마다 z 인덱스 증가
-          src: ev.target.result, // base64 이미지 데이터
-          userId: userId, // 현재 사용자 ID
-          // postId는 저장 시 포함
+          x: Math.round(400 + Math.random() * 50),
+          y: Math.round(100 + Math.random() * 50),
+          z: prev.length + 1,
+          src: `${process.env.REACT_APP_API_URL}${data.url}`,
+          userId: userId,
         },
       ]);
-    };
-    reader.readAsDataURL(file); // 파일을 base64로 읽음
-    e.target.value = ""; // 파일 input 초기화, 파일을 다시 선택할 수 있도록
+    } catch (error) {
+      console.error('이미지 업로드 에러:', error);
+      alert('이미지 업로드에 실패했습니다.🥲');
+    }
+
+    e.target.value = ""; // 파일 input 초기화
   };
 
   // 이미지 삭제
@@ -88,20 +109,26 @@ function PostCreate() {
   const handleDragEnd = (event) => { // 드래그가 끝났을 때 호출, event 객체를 인자로 받음
     const { active, delta } = event; // active: 현재 드래그 중인 요소, delta: 드래그 이동 거리
     if (!active) return; // active가 없으면 return nothing
-    setTextboxes(prev => 
-      prev.map(tb => // 현재 드래그 중인 텍스트박스의 id와 일치하는 경우
-        tb.id === active.id // active.id와 일치하는 텍스트박스만 위치 갱신
-          ? { ...tb, x: tb.x + (delta?.x || 0), y: tb.y + (delta?.y || 0) } // 기존 배열의 x, y 좌표에 delta 값을 더함
-          : tb // 일치하지 않는 텍스트박스는 그대로 유지
-      )
-    );
-    setImages(prev =>
-      prev.map(img => // 현재 드래그 중인 이미지의 id와 일치하는 경우
-        img.id === active.id // active.id와 일치하는 이미지만 위치 갱신
-          ? { ...img, x: img.x + (delta?.x || 0), y: img.y + (delta?.y || 0) } // 기존 배열의 x, y 좌표에 delta 값을 더함
-          : img // 일치하지 않는 이미지는 그대로 유지
-      )
-    );
+
+    const activeId = String(active.id);
+
+    if (activeId.startsWith("text")) {
+      setTextboxes(prev => 
+        prev.map(tb => // 현재 드래그 중인 텍스트박스의 id와 일치하는 경우
+          tb.id === active.id // active.id와 일치하는 텍스트박스만 위치 갱신
+            ? { ...tb, x: tb.x + (delta?.x || 0), y: tb.y + (delta?.y || 0) } // 기존 배열의 x, y 좌표에 delta 값을 더함
+            : tb // 일치하지 않는 텍스트박스는 그대로 유지
+        )
+      );
+    } else if (activeId.startsWith("image")) {
+        setImages(prev =>
+          prev.map(img => // 현재 드래그 중인 이미지의 id와 일치하는 경우
+            img.id === active.id // active.id와 일치하는 이미지만 위치 갱신
+              ? { ...img, x: img.x + (delta?.x || 0), y: img.y + (delta?.y || 0) } // 기존 배열의 x, y 좌표에 delta 값을 더함
+              : img // 일치하지 않는 이미지는 그대로 유지
+          )
+        );
+    }
   };
 
   const handleBoardClick = () => setEditingId(null); // 보드 클릭 시 편집 중인 텍스트박스 해제
@@ -116,58 +143,48 @@ function PostCreate() {
   const handleAlertNo = () => setShowAlert(false); // 경고 팝업에서 "No" 클릭 시 팝업 닫기
 
   // 완료(저장) - DB에 POST 후 이동
-  const handleCheck = () => { 
-    fetch("http://localhost:5000/post", { 
-      method: "POST", 
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId }),
-    })
-      .then(res => res.json())
-      .then(postRes => {
-        const postId = postRes.id;
-        // 텍스트박스 저장 (id, postId 포함)
-        return Promise.all( 
-          textboxes.map(tb =>
-            fetch("http://localhost:5000/textbox", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                id: tb.id,
-                x: tb.x,
-                y: tb.y,
-                postId: postId,
-                content: tb.content,
-              }),
-            })
-          )
-        ).then(() =>
-          // 이미지 저장 (id, postId, z, width, height, src, userId 포함)
-          Promise.all(
-            images.map((img, idx) =>
-              fetch("http://localhost:5000/image", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  id: img.id,
-                  x: img.x,
-                  y: img.y,
-                  z: img.z ?? idx + 1,
-                  postId: postId,
-                  src: img.src,
-                  userId: img.userId,
-                }),
-              })
-            )
-          )
-        ).then(() => postId); // 모든 텍스트박스와 이미지 저장 후 postId 반환
-      })
-      .then((postId) => { // 모든 저장이 완료된 후
-        alert("생성 완료!");
-        navigate(`/post/${postId}`); // 생성된 포스트로 이동
-      })
-      .catch(() => { // 에러 처리
-        alert("에러가 발생했습니다.");
+  const handleCheck = async () => {
+    // textbox data 변환
+    const textContents = textboxes.map((tb) => ({
+      type: "text",
+      value: tb.content,
+      x: tb.x,
+      y: tb.y,
+    }));
+
+    // image data 변환
+    const imageContents = images.map((img) => ({
+      type: "image",
+      url: img.src,
+      x: img.x,
+      y: img.y,
+    }));
+
+    const autoTitle = (textboxes.length > 0 && textboxes[0].content.trim() !== "") ? textboxes[0].content
+    : "no title";
+
+    // contents 배열로 병합
+    const requestBody = {
+      title: autoTitle,
+      contents: [...textContents, ...imageContents],
+    };
+
+    try {
+      const response = await customFetch("/posts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
       });
+
+      const postId = response.data.id;
+      
+      alert("생성 완료!");
+      navigate(`/post/${postId}`);
+    } catch (e) {
+      alert("에러가 발생했습니다.");
+    }
   };
 
 
